@@ -1,12 +1,12 @@
 //Code ripped from: https://www.linkedin.com/pulse/connecting-reactjs-nodejs-bit-by-bit-guide-ataur-rahman/
 
 const express = require('express');
-const ap = express();
+const app = express();
 const port = 3001; //arbitrary
 
 app.get('/api/data', (req, res) => {
   // Handle your API logic here
-  const data = { message: 'Hello from the server!' };
+  const data = { message: 'your mom' };
   res.json(data);
 });
 
