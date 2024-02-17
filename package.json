@@ -2,7 +2,6 @@
   "name": "react.dev",
   "version": "0.0.0",
   "main": "/src/index.js",
-  "proxy": "http://localhost:3001",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
@@ -15,6 +14,8 @@
     "@testing-library/user-event": "^13.5.0",
     "axios": "^1.6.7",
     "express": "^4.18.2",
+    "http-proxy-middleware": "^2.0.6",
+    "mysql2": "^3.9.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.19.0",
@@ -35,7 +36,6 @@
     ]
   },
   "description": "Every \"install\" command necessary when running the app.",
-  "devDependencies": {},
   "keywords": [],
   "author": "",
   "license": "ISC"
