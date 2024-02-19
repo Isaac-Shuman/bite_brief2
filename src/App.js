@@ -7,6 +7,7 @@ import Home from "./pages";
 import Comdishes from "./pages/comdishes";
 import Favdishes from "./pages/favdishes";
 import Signin from "./pages/signin";
+import ServerConnection from "./pages/rankings";
 //import Home from "./pages/home";
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/comdishes" element={<Comdishes />} />
         <Route path="/customize" element={<Favdishes />} />
         <Route path="/signin" element={<Signin />} />
+        <Route path="/rankings" element={<ServerConnection />} />
       </Routes>
     </Router>
   );
