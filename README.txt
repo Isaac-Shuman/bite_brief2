@@ -8,7 +8,9 @@ npm install axios //axios is used by the React.js app to make API requests to th
 "proxy": "http://localhost:3001" //This line suddenly stopped working for me, so I added 
                                     // src/setupProxy.js
 
-If you're running this on Windows, MAKE A DATABASE prior to running the script. Try and use WSL if you can. Isaac can help you with this.
+MAKE A DATABASE prior to running the script. 
+If you're on Windows, Isaac can help you with this.
+If you're on Linux or WSL, run: usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
 
 - Ignore the Sql_functions.js file: I was trying to make a class to encapsulate
 all DB interaction, but my functions would return null before the query was
