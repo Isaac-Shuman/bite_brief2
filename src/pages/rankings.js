@@ -15,8 +15,9 @@ const Rankings = () => {
 function ServerConnection() {
   const [data, setData] = useState('');
 
+  //I think we are technically supposed to have a url here that is less random and more associated with our website
   useEffect(() => {
-    axios.get('/api/data')
+    axios.get('/api/rankings') 
       .then(response => {
         setData(response.data.message);
       })
@@ -30,6 +31,13 @@ function ServerConnection() {
     msg = msg + data[i].id + "   ";
     msg = msg + data[i].name + "<br />";
   }
+  /*
+  make an array = []
+  for (let i =0; i<5; i++)
+  {
+    display object with data from serverping3
+  }
+  */
 
   return (
     <div className="App">
