@@ -1,0 +1,60 @@
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'PT Sans', sans-serif;
+}
+
+.home,
+.sign-up{
+  display: flex;
+  height: 90vh;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+}
+
+
+.myprofile {
+  height: 100vh;
+  background-position: center;
+  background-size: fill;
+  background-repeat: no-repeat;
+  background-color:rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  font-size: 25px;
+  margin: 50px; /* Add margin between paragraphs */
+}
+.myprofile select {
+  font-size: 18px; /* Adjust the font size as needed */
+}
+
+.myprofile input[type='text'] {
+  height: 30px; /* Increase the height of the search input field */
+  width: 30%; /* Ensure the search input field spans the full width */
+  font-size: 20px; /* Adjust font size as needed */
+  padding: 10px; /* Add padding for better visual appearance */
+}
+
+
+.aboutus {
+  height: 100vh;
+  background-position: center;
+  background-size: fill;
+  background-repeat: no-repeat;
+  background-color:rgb(255, 255, 255);
+  color: rgb(0, 0, 0);
+  font-size: 30px;
+  margin: 50px; /* Add margin between paragraphs */
+}
+
+.sign-up {
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-color:black;
+  color: rgb(247, 247, 246);
+  font-size: 100px;
+  height: 100vh;
+
+}
