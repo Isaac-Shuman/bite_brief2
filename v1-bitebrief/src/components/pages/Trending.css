@@ -1,0 +1,30 @@
+.trending {
+    padding: 30px;
+  }
+  
+  .trending-container {
+    text-align: center; /* Center the content */
+  }
+
+  
+  .popular-items {
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center items horizontally */
+  }
+  
+  .item {
+    margin-bottom: 30px; /* Add space between items */
+  }
+  
+  .item-name {
+    font-size: 24px; /* Increase font size */
+    color: red;
+  }
+  
+  .item-likes {
+    margin-left: 5px; /* Adjust spacing between name and heart */
+    font-size: 24px; /* Increase font size */
+    color: red;
+  }
+  
