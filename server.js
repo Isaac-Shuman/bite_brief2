@@ -234,11 +234,9 @@ async function randQuerry(arg){
   // JOIN Users ON Foods_Users.user_id = Users.id;` 
 
   //get the highest ranked foods
-  var sql = `SELECT name, likes
-    FROM Foods
-    ORDER BY likes DESC;`
-
-
+  // var sql = `SELECT name, likes
+  //   FROM Foods
+  //   ORDER BY likes DESC;`
 
   //search for foods by keywords
   var sql = `SELECT name
