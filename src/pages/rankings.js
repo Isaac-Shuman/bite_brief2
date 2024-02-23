@@ -26,16 +26,17 @@ function ServerConnection() {
   }, []);
 
   var msg = "";
-  for (let i =0; i<data.length; i++){
-    msg = msg + data[i].id + "   ";
-    msg = msg + data[i].name + "<br />";
-  }
+  
+  // for (let i =0; i<data.length; i++){
+  //   msg = msg + data[i].id + "   ";
+  //   msg = msg + data[i].name + "<br />";
+  // }
 
   return (
     <div className="App">
       <h1>React and Node.js Integration</h1>
       <p>Full Message from server: {JSON.stringify(data)}</p>
-      <p>After for-loop processing: {msg}</p>
+      <p> {typeof data}After for-loop processing: {msg}</p>
       <p>The linebreak (br) thing doesn't work as a string but let's fix that later</p>
     </div>
   );
