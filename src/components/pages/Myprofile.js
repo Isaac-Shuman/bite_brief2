@@ -1,10 +1,17 @@
 import React from 'react';
 import '../../App.css';
+import { useState, useEffect } from 'react';
+import './Trending.css';
+import axios from 'axios';
 
 export default function Myprofile() {
+  const [typedText, setText] = useState('');
+  const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
+
   // Function to handle search bar change
   const handleSearchChange = (event) => {
     // Connect to backend database and perform search
+    setText(event.target.value);
     console.log('Search query:', event.target.value);
   };
 
@@ -23,6 +30,22 @@ export default function Myprofile() {
     // Connect to backend database to save selected health goal
     console.log('Selected health goal:', selectedGoal);
   };
+
+  useEffect(() => {
+    axios({
+        method: 'post',
+        url: '/api/profile',
+        data: {
+          meal: typedText
+        }
+    }) 
+      .then(response => {
+        setMatchMeals(response.data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, [typedText]);
 
   return (
     <div className='myprofile'>
@@ -69,6 +92,18 @@ export default function Myprofile() {
         {/* Add more health goal options */}
       </div>
       {/* Connect to backend database to save selected health goal */}
+
+      <div className="popular-items">
+        {matchMeals.map((item, index) => (
+          <div className="item" key={index}>
+            <span className="item-name">{item.name}</span>
+            <span className="item-likes">
+              <i className="fas fa-heart"></i> {item.likes}
+            </span>
+            <button type="submit"><i class="fa fa-search"></i></button>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

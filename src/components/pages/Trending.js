@@ -1,6 +1,7 @@
 import '../../App.css';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './Trending.css';
+import axios from 'axios';
 
 const Trending = () => {
   const [popularItems, setPopularItems] = useState([
@@ -10,6 +11,19 @@ const Trending = () => {
     { name: 'Item 4     ', likes: 25 },
     { name: 'Item 5     ', likes: 30 }
   ]);
+
+  useEffect(() => {
+    axios({
+        method: 'post',
+        url: '/api/favdishes',
+    }) 
+      .then(response => {
+        setPopularItems(response.data);
+      })
+      .catch(error => {
+        console.error(error);
+      });
+  }, []);
 
   return (
     <div className="trending-container">

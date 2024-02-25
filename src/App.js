@@ -1,27 +1,29 @@
-// Filename - App.js
+import React from 'react';
+import Navbar from './components/Navbar';
+import './App.css';
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom';
+import Myprofile from './components/pages/Myprofile';
+import Trending from './components/pages/Trending';
+import Home from './components/pages/Home';
+import SignUp from './components/pages/SignUp';
+import AboutUs from './components/pages/AboutUs';
 
-import React from "react";
-import Navbar from "./components/Navbar";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Home from "./pages";
-import Comdishes from "./pages/comdishes";
-import Favdishes from "./pages/favdishes";
-import Signin from "./pages/signin";
-import ServerConnection from "./pages/rankings";
-//import Home from "./pages/home";
 
 function App() {
   return (
-    <Router>
-      <Navbar />
-      <Routes>
-        <Route exact path="/" element={<Home />} />
-        <Route path="/comdishes" element={<Comdishes />} />
-        <Route path="/customize" element={<Favdishes />} />
-        <Route path="/signin" element={<Signin />} />
-        <Route path="/rankings" element={<ServerConnection />} />
-      </Routes>
-    </Router>
+    <>
+      <Router>
+        <Navbar />
+        <Switch>
+          <Route path='/' exact component={Home} />
+          <Route path='/myprofile' component={Myprofile} />
+          <Route path='/trending' component={Trending} />
+          <Route path='/sign-up' component={SignUp} />
+          <Route path="/aboutus" component={AboutUs} />
+
+        </Switch>
+      </Router>
+    </>
   );
 }
 
