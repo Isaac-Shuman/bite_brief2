@@ -6,6 +6,10 @@ const express = require('express');
 const app = express();
 const port = 3001; //arbitrary
 
+var bodyParser = require('body-parser');
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(bodyParser.json());  //necessary for it to process post request which contain data
+
 const mysql = require('mysql2/promise');
 meh();
 //async keyword lets you use 'await'
@@ -16,11 +20,42 @@ async function meh(){ //because await can't be used in top-level, so let's make 
   db = await initialize();
   await readData();
   
+
   app.get('/api/data', async (req, res) => { //I hope that async doesn't break something later...
     rows = await randQuerry('e');
     console.log(JSON.stringify(rows)); //to see rows on console in readable format
     const data = { message: rows };
     res.json(data); //send it off
+  });
+
+  app.post('/api/favdishes', async (req, res) => { 
+    //send back:
+    //[meal, urlToNutritionPage, whether or not the user liked it]
+    const meal = req.body.meal;
+    //const data = { message: meal.length}
+    const data = [
+      { name: 'Item 1     ', likes: 69 },
+      { name: 'Item 2     ', likes: 420 },
+      { name: 'Item 3     ', likes: 1738 },
+      { name: 'Item 4     ', likes: 25 },
+      { name: 'Item 5     ', likes: 30 }
+    ]
+    res.json(data);
+  });
+
+  app.post('/api/profile', async (req, res) => { 
+    //send back:
+    //[meal, urlToNutritionPage, whether or not the user liked it]
+    const meal = req.body.meal;
+    //const data = { message: meal.length}
+    const data = [
+      { name: 'Item 1     ', likes: 69 },
+      { name: 'Item 2     ', likes: 420 },
+      { name: 'Item 3     ', likes: 1738 },
+      { name: 'Item 4     ', likes: 25 },
+      { name: 'Item 5     ', likes: meal.length }
+    ]
+    res.json(data);
   });
 
   app.listen(port, () => {
