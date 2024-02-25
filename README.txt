@@ -18,7 +18,7 @@ The navbar may not be fully visible if your window is not maximized.
 
 
 Attribution info:
-    This project was bootstrapped with Create React App.
+    This project was bootstrapped with Create React App(https://github.com/facebook/create-react-app).
     The frontend was made with help from: ??????
 
 From Beatrice:
