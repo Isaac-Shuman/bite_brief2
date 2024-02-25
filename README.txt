@@ -16,10 +16,16 @@ Run "npm start" IN A SEPARATE TERMINAL to start the react app. The website shoul
 The navbar may not be fully visible if your window is not maximized.
 
 
+
+Attribution info:
+    This project was bootstrapped with Create React App.
+    The frontend was made with help from: ??????
+
+From Beatrice:
+
 "proxy": "http://localhost:3001" //This line suddenly stopped working for me, so I added 
                                     // src/setupProxy.js
 
-From Beatrice:
 - Ignore the Sql_functions.js file: I was trying to make a class to encapsulate
 all DB interaction, but my functions would return null before the query was
 completed, so then I tried using promises (await keyword) to make the program 
