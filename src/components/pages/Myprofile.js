@@ -31,12 +31,17 @@ export default function Myprofile() {
     console.log('Selected health goal:', selectedGoal);
   };
 
-  useEffect(() => {
+  ////////////Beatrice:
+  //get this user's favorite foods from the server
+  const [userID, setUserID] = useState(0);
+  const [reRender, setReRender] = useState(true);
+  const [favFoods, setFavFoods] = useState([Array().fill(null)]);
+  useEffect(() => { //initially render all dishes(trending)
     axios({
         method: 'post',
-        url: '/api/profile',
+        url: '/api/favdishes', //url: '/api/profile',
         data: {
-          meal: typedText
+          // meal: typedText
         }
     }) 
       .then(response => {
@@ -45,8 +50,45 @@ export default function Myprofile() {
       .catch(error => {
         console.error(error);
       });
-  }, [typedText]);
+  }, [reRender]);
 
+  useEffect(() => { //render all fav dishes of this user
+    axios({
+      method: 'post',
+      url: '/api/myFavDishes',
+      data: {
+        id: userID
+      }
+  }) 
+    .then(response => {
+      setFavFoods(response.data);
+    })
+    .catch(error => {
+      console.error(error);
+    }); }, [reRender]);
+
+  //clicked the remove button on a food item
+  const removeFood = (foodID)=> {
+    // setReRender(!reRender);
+    axios({
+      method: 'delete',
+      url: '/api/myFavDishes',
+      data: {
+        Uid: userID,
+        Fid: foodID
+      }
+    }) 
+    .then(response => {
+      console.log("deleted %d, code: %s", foodID, response);
+    })
+    .catch(error => {
+      console.error(error);
+    });
+    
+    setReRender(!reRender); //to redisplay updated dishes
+    
+  };
+////////////
   return (
     <div className='myprofile'>
      
@@ -104,6 +146,28 @@ export default function Myprofile() {
           </div>
         ))}
       </div>
+
+      
+      <div>
+      <input
+          type='text'
+          placeholder='For now, input a user id number (1~6)'
+          onChange={(event) => {
+            // console.log(JSON.stringify(event.target.value));
+            setUserID(Number(event.target.value));
+            setReRender(!reRender);
+          }}
+        />
+      <h1> Your favorite foods</h1>
+        {favFoods.map((item, index) => (
+          <div className="item" key={index}>
+            <span className="item-name">{item.name}</span>
+            {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
+            
+            <button onClick={() => {removeFood(favFoods[index].id)}}> Remove </button>
+          </div>
+        ))}
+        </div>
     </div>
   );
 }
