@@ -116,7 +116,32 @@ async function meh(){ //because await can't be used in top-level, so let's make 
       return;
   });
 
-  
+  app.post('/api/signup', async (req, res) => {
+    const {data} = req.body
+
+    if (!data) {
+      return res.status(400).json({ error: 'No data passed' })
+    }
+
+    // data.name, data.email, data.picture for Google user profile data
+
+    const searchQuery = ``
+    // search if user email is in database
+
+    const updateQuery = ``
+    // updates database with user data
+
+    try {
+      const user = await db.execute(searchQuery)
+
+      if (!user) {
+        await db.execute(updateQuery)
+      }
+    }
+    catch (error) {
+      res.status(400).json(error)
+    }
+  })  
 
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
