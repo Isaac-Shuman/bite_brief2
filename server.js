@@ -2,33 +2,67 @@
 
 //For most of mysql2 stuff: https://sidorares.github.io/node-mysql2/docs/documentation/promise-wrapper
 
-const express = require('express');
+const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
 
-var bodyParser = require('body-parser');
+var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
-app.use(bodyParser.json());  //necessary for it to process post request which contain data
+app.use(bodyParser.json()); //necessary for it to process post request which contain data
 
-const mysql = require('mysql2/promise');
+const mysql = require("mysql2/promise");
 meh();
 //async keyword lets you use 'await'
-async function meh(){ //because await can't be used in top-level, so let's make a function...
+async function meh() {
+  //because await can't be used in top-level, so let's make a function...
 
   //"wait" for these commands to return instead of executing synchronously
   //wow that was an awfully long time spent debugging and googling
   db = await initialize();
   await readData();
-  
 
-  app.get('/api/data', async (req, res) => { //I hope that async doesn't break something later...
-    rows = await randQuerry('e');
+  app.get("/api/data", async (req, res) => {
+    //I hope that async doesn't break something later...
+    rows = await randQuerry("e");
     console.log(JSON.stringify(rows)); //to see rows on console in readable format
     const data = { message: rows };
     res.json(data); //send it off
   });
 
-  app.post('/api/favdishes', async (req, res) => { 
+  app.get("/api/search", async (req, res) => {
+    let searchTerm = req.query.term;
+    if (!searchTerm) {
+      return res.status(400).send("Search term is required");
+    }
+    try {
+      let sql = `SELECT * FROM foods WHERE name LIKE ?`;
+      const [results, fields] = await db.execute(sql, [`%${searchTerm}%`]);
+      res.json(results);
+    } catch (err) {
+      console.error(err);
+      res.status(500).send("An error occurred while searching");
+    }
+  });
+
+  //add searching result(fav dish) to database
+  app.post("/api/addToFavorites", async (req, res) => {
+    const { userID, foodID } = req.body; // Extract userId and foodId from the request body
+
+    if (!userID || !foodID) {
+      return res.status(400).json({ message: "Missing user ID or food ID" });
+    }
+
+    try {
+      var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; // This SQL prevents duplicates
+      await db.execute(sql, [userID, foodID]);
+      res.json({ message: "Favorite added successfully." });
+    } catch (err) {
+      console.error("Error adding favorite:", err);
+      res.status(500).json({ message: "Error adding favorite" });
+    }
+  });
+
+  app.post("/api/favdishes", async (req, res) => {
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
     // const meal = req.body.meal;
@@ -45,83 +79,80 @@ async function meh(){ //because await can't be used in top-level, so let's make 
 
     var sql = `SELECT name, likes
     FROM Foods
-    ORDER BY likes DESC;`
-  
-		var response = '';
-    try{
-			const [rFoods, fFoods] = await db.execute(sql);
-			response = rFoods;
-    } catch(err){
+    ORDER BY likes DESC;`;
+
+    var response = "";
+    try {
+      const [rFoods, fFoods] = await db.execute(sql);
+      response = rFoods;
+    } catch (err) {
       // console.error(err);
       res.json(err.code); //for example, ER_DUP_ENTRY
     }
-      console.log(JSON.stringify(response));
-		  res.json(response);
+    console.log(JSON.stringify(response));
+    res.json(response);
   });
 
-  app.post('/api/profile', async (req, res) => { 
+  app.post("/api/profile", async (req, res) => {
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
     const meal = req.body.meal;
     //const data = { message: meal.length}
     const data = [
-      { name: 'Item 1     ', likes: 69 },
-      { name: 'Item 2     ', likes: 420 },
-      { name: 'Item 3     ', likes: 1738 },
-      { name: 'Item 4     ', likes: 25 },
-      { name: 'Item 5     ', likes: meal.length }
-    ]
+      { name: "Item 1     ", likes: 69 },
+      { name: "Item 2     ", likes: 420 },
+      { name: "Item 3     ", likes: 1738 },
+      { name: "Item 4     ", likes: 25 },
+      { name: "Item 5     ", likes: meal.length },
+    ];
     res.json(data);
   });
 
-  app.post('/api/myFavDishes', async (req, res) => { 
+  app.post("/api/myFavDishes", async (req, res) => {
     const userID = req.body.id;
     var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
   JOIN Foods_Users ON Foods_Users.food_id = Foods.id
   JOIN Users ON Foods_Users.user_id = Users.id
-  WHERE Users.id = ${userID};` 
-  
-  console.log(userID);
-  
-		var response = '';
-    try{
-			const [rFoods, fFoods] = await db.execute(sql);
-			response = rFoods;
-    } catch(err){
+  WHERE Users.id = ${userID};`;
+
+    console.log(userID);
+
+    var response = "";
+    try {
+      const [rFoods, fFoods] = await db.execute(sql);
+      response = rFoods;
+    } catch (err) {
       // console.error(err);
       res.json(err.code); //for example, ER_DUP_ENTRY
     }
-		  res.json(response);
+    res.json(response);
   });
 
-  app.delete('/api/myFavDishes', async (req, res) => { 
+  app.delete("/api/myFavDishes", async (req, res) => {
     const foodID = req.body.Fid;
     const userID = req.body.Uid;
     var sql1 = `DELETE FROM Foods_Users
-    WHERE user_id = ${userID} AND food_id = ${foodID};`
-    var sql2= `UPDATE Foods SET likes = likes - 1
-    WHERE id = ${foodID};` //also update like count
+    WHERE user_id = ${userID} AND food_id = ${foodID};`;
+    var sql2 = `UPDATE Foods SET likes = likes - 1
+    WHERE id = ${foodID};`; //also update like count
 
     console.log(sql1);
-		var response = '';
-    try{
-			await db.execute(sql1);
+    var response = "";
+    try {
+      await db.execute(sql1);
       await db.execute(sql2);
-    } catch(err){
+    } catch (err) {
       // console.error(err);
       res.json(err.code); //for example, ER_DUP_ENTRY
       return;
     }
-      return;
+    return;
   });
-
-  
 
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
-
 }
 
 //////helper functions:
@@ -129,26 +160,25 @@ async function meh(){ //because await can't be used in top-level, so let's make 
 async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : '12345678',
-    database : 'default_db', //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
-    multipleStatements: false //not protected against sql injections, but meh ¯\_(ツ)_/¯
+    host: "localhost",
+    user: "root",
+    password: "Welcome2023!",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
-  console.log('connected as id ' + connection.threadId);
+  console.log("connected as id " + connection.threadId);
 
   //I labeled the helper tables in alphabetical order, btw
-  await connection.execute('DROP TABLE IF EXISTS Foods_Users;');
-  await connection.execute('DROP TABLE IF EXISTS Allergies_Users;');
-  await connection.execute('DROP TABLE IF EXISTS Diets_Users;');
-  await connection.execute('DROP TABLE IF EXISTS Allergies_Foods;');
-  await connection.execute('DROP TABLE IF EXISTS Diets_Foods;');
+  await connection.execute("DROP TABLE IF EXISTS Foods_Users;");
+  await connection.execute("DROP TABLE IF EXISTS Allergies_Users;");
+  await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
+  await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
+  await connection.execute("DROP TABLE IF EXISTS Diets_Foods;");
 
-
-  await connection.execute('DROP TABLE IF EXISTS Foods;'); //delete it if it already exists, for now
-  await connection.execute('DROP TABLE IF EXISTS Users;');
-  await connection.execute('DROP TABLE IF EXISTS Allergies;');
-  await connection.execute('DROP TABLE IF EXISTS Diets;');
+  await connection.execute("DROP TABLE IF EXISTS Foods;"); //delete it if it already exists, for now
+  await connection.execute("DROP TABLE IF EXISTS Users;");
+  await connection.execute("DROP TABLE IF EXISTS Allergies;");
+  await connection.execute("DROP TABLE IF EXISTS Diets;");
 
   var createFoodsTable = `
   CREATE TABLE Foods (
@@ -180,7 +210,7 @@ async function initialize() {
    description TEXT
   );`; //creating a Diets table
 
-///////Helper tables
+  ///////Helper tables
   var createFoodsUsersTable = `
   CREATE TABLE IF NOT EXISTS Foods_Users (
      food_id BIGINT,
@@ -209,7 +239,7 @@ async function initialize() {
     UNIQUE(diet_id, user_id)
  );`; //helper table
 
- var createAllergiesFoodsTable = `
+  var createAllergiesFoodsTable = `
  CREATE TABLE IF NOT EXISTS Allergies_Foods (
    allergy_id BIGINT,
    food_id BIGINT,
@@ -218,7 +248,7 @@ async function initialize() {
    UNIQUE(allergy_id, food_id)
 );`; //helper table
 
-var createDietsFoodsTable = `
+  var createDietsFoodsTable = `
 CREATE TABLE IF NOT EXISTS Diets_Foods (
   diet_id BIGINT,
   food_id BIGINT,
@@ -227,10 +257,12 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   UNIQUE(diet_id, food_id)
 );`; //helper table
 
-try{
+  try {
     const [rFoods, fFoods] = await connection.execute(createFoodsTable);
     const [rUsers, fUsers] = await connection.execute(createUsersTable);
-    const [rAllergies, fAllergies] = await connection.execute(createAllergiesTable);
+    const [rAllergies, fAllergies] = await connection.execute(
+      createAllergiesTable
+    );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable);
@@ -239,7 +271,7 @@ try{
     await connection.execute(createDietsFoodsTable);
 
     console.log("Tables created successfully");
-  } catch(err){
+  } catch (err) {
     console.log(err);
     console.error("Error creating tables:", err);
     await connection.end();
@@ -248,11 +280,13 @@ try{
   return connection;
 }
 
-async function readData(){
+async function readData() {
   //probably where the web-scraping stuff goes
   //add some dummy data for now
-  var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
-  var allergyIn = "INSERT INTO Allergies (name) VALUES ('dairy'), ('gluten'), ('eggs');";
+  var foodIn =
+    "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
+  var allergyIn =
+    "INSERT INTO Allergies (name) VALUES ('dairy'), ('gluten'), ('eggs');";
   var dietIn = `INSERT INTO Diets (name, description) VALUES 
     ('healthy', 'what''s good for you'), 
     ('processed', 'what''s probably not good for you'), 
@@ -286,18 +320,18 @@ async function readData(){
   (2, 1), (2,2),
   (3, 2)
 ;`;
-var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
+  var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
   (1, 3), (1,5),
   (2, 1), (2, 2), (2, 4),
   (3, 3), (3, 5)
 ;`;
 
-var updateLikes = `UPDATE Foods RIGHT JOIN (
+  var updateLikes = `UPDATE Foods RIGHT JOIN (
 SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
 ON Foods.id = t.food_id
-SET likes=cnt;`
+SET likes=cnt;`;
 
-  try{
+  try {
     const [rFoods, fFoods] = await db.execute(foodIn);
     await db.execute(allergyIn);
     await db.execute(dietIn);
@@ -309,14 +343,12 @@ SET likes=cnt;`
     await db.execute(dietsFoodsIn);
 
     await db.execute(updateLikes);
-
-  } catch(err){
+  } catch (err) {
     console.log(err);
   }
-
 }
 
-async function randQuerry(arg){
+async function randQuerry(arg) {
   //here's some queries to play with:
 
   //get all columns in the food table
@@ -326,7 +358,7 @@ async function randQuerry(arg){
   // var sql = `SELECT Foods.name, Users.username
   // FROM Foods
   // JOIN Foods_Users ON Foods_Users.food_id = Foods.id
-  // JOIN Users ON Foods_Users.user_id = Users.id;` 
+  // JOIN Users ON Foods_Users.user_id = Users.id;`
 
   //get the highest ranked foods
   // var sql = `SELECT name, likes
@@ -336,15 +368,15 @@ async function randQuerry(arg){
   //search for foods by keywords
   var sql = `SELECT name
     FROM Foods
-    WHERE name LIKE '%${arg}%';`
-  
-		var response = '';
-    try{
-			const [rFoods, fFoods] = await db.execute(sql);
-			response = rFoods;
-    } catch(err){
-      // console.error(err);
-      return err.code; //for example, ER_DUP_ENTRY
-    }
-		  return response;
+    WHERE name LIKE '%${arg}%';`;
+
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    return err.code; //for example, ER_DUP_ENTRY
+  }
+  return response;
 }
