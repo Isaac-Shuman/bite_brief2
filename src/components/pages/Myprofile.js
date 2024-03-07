@@ -7,32 +7,38 @@ import axios from "axios";
 export default function Myprofile() {
   const [typedText, setText] = useState("");
   const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   // Function to handle search bar change
   const handleSearchChange = async (event) => {
     const searchTerm = event.target.value;
     setText(searchTerm);
 
-    // Check if search term is not empty and user ID is set
     if (searchTerm.trim() === "" || userID === 0) {
-      setMatchMeals([]); // Clear results if the search is empty or userID not set
+      setMatchMeals([]);
+      setSearchPerformed(false); // when a search has not been performed or is not valid
       return;
     }
 
     try {
-      console.log(searchTerm);
-      console.log(typedText);
       const response = await axios.get(`/api/search`, {
         params: {
           term: searchTerm,
-          userID: userID, // Pass the user ID as a parameter
+          userID: userID,
         },
       });
-      setMatchMeals(await response.data); // Update search results with response data
-      console.log({ matchMeals: response.data }); // Log the received search results
+      if (response.data && response.data.length > 0) {
+        // If there are search results, update the state
+        setMatchMeals(response.data);
+      } else {
+        // If there are no search results
+        setMatchMeals([]); // Keep matchMeals as an empty array
+      }
+      setSearchPerformed(true); // when a search has been performed
     } catch (error) {
       console.error("Search error:", error);
-      setMatchMeals([]); // Clear results on error
+      setMatchMeals([]);
+      setSearchPerformed(false);
     }
   };
 
@@ -159,20 +165,18 @@ export default function Myprofile() {
       {/* Search Result */}
       <div>
         <h3>Search Results:</h3>
-        {matchMeals.map((meal, index) => {
-          console.log(meal.id);
-
-          return (
+        {searchPerformed && matchMeals.length === 0 ? (
+          <p>No dishes found...</p>
+        ) : (
+          matchMeals.map((meal, index) => (
             <div key={index} className="search-result">
               <span>{meal.name}</span>
               <button onClick={() => addToFavorites(userID, meal.id)}>
-                {" "}
-                {/* Here we pass the userID along with the meal.id */}
                 Add to Favorites
               </button>
             </div>
-          );
-        })}
+          ))
+        )}
       </div>
 
       {/* My Allergies */}
