@@ -1,18 +1,71 @@
-import React from 'react';
-import '../../App.css';
-import { useState, useEffect } from 'react';
-import './Trending.css';
-import axios from 'axios';
+import React from "react";
+import "../../App.css";
+import { useState, useEffect } from "react";
+import "./Trending.css";
+import axios from "axios";
 
 export default function Myprofile() {
-  const [typedText, setText] = useState('');
+  const [typedText, setText] = useState("");
   const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
+  const [searchPerformed, setSearchPerformed] = useState(false);
 
   // Function to handle search bar change
-  const handleSearchChange = (event) => {
-    // Connect to backend database and perform search
-    setText(event.target.value);
-    console.log('Search query:', event.target.value);
+  const handleSearchChange = async (event) => {
+    const searchTerm = event.target.value;
+    setText(searchTerm);
+
+    if (searchTerm.trim() === "" || userID === 0) {
+      setMatchMeals([]);
+      setSearchPerformed(false); // when a search has not been performed or is not valid
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/search`, {
+        params: {
+          term: searchTerm,
+          userID: userID,
+        },
+      });
+      if (response.data && response.data.length > 0) {
+        // If there are search results, update the state
+        setMatchMeals(response.data);
+      } else {
+        // If there are no search results
+        setMatchMeals([]); // Keep matchMeals as an empty array
+      }
+      setSearchPerformed(true); // when a search has been performed
+    } catch (error) {
+      console.error("Search error:", error);
+      setMatchMeals([]);
+      setSearchPerformed(false);
+    }
+  };
+
+  const addToFavorites = async (userID, foodID) => {
+    try {
+      // Logging to ensure IDs are correct before sending
+      console.log("Adding to favorites:", { userID, foodID });
+
+      // Using Axios to send a POST request
+      const response = await axios.post("/api/addToFavorites", {
+        userID, // Assuming userID is already defined and valid
+        foodID,
+      });
+
+      // Check if the response was successful
+      if (response.status === 200) {
+        alert(response.data.message); // Or update UI to show success
+      } else {
+        console.error("Failed to add to favorites:", response.data.message);
+      }
+    } catch (error) {
+      // If there's an error with the request itself, it will be caught here
+      console.error(
+        "Error adding to favorites:",
+        error.response ? error.response.data : error
+      );
+    }
   };
 
   // Function to handle allergy selection
@@ -20,7 +73,7 @@ export default function Myprofile() {
     // Get selected allergy value
     const selectedAllergy = event.target.value;
     // Connect to backend database to save selected allergy
-    console.log('Selected allergy:', selectedAllergy);
+    console.log("Selected allergy:", selectedAllergy);
   };
 
   // Function to handle health goal selection
@@ -28,7 +81,7 @@ export default function Myprofile() {
     // Get selected goal value
     const selectedGoal = event.target.value;
     // Connect to backend database to save selected health goal
-    console.log('Selected health goal:', selectedGoal);
+    console.log("Selected health goal:", selectedGoal);
   };
 
   ////////////Beatrice:
@@ -36,86 +89,106 @@ export default function Myprofile() {
   const [userID, setUserID] = useState(0);
   const [reRender, setReRender] = useState(true);
   const [favFoods, setFavFoods] = useState([Array().fill(null)]);
-  useEffect(() => { //initially render all dishes(trending)
+  useEffect(() => {
+    //initially render all dishes(trending)
     axios({
-        method: 'post',
-        url: '/api/favdishes', //url: '/api/profile',
-        data: {
-          // meal: typedText
-        }
-    }) 
-      .then(response => {
+      method: "post",
+      url: "/api/favdishes", //url: '/api/profile',
+      data: {
+        // meal: typedText
+      },
+    })
+      .then((response) => {
         setMatchMeals(response.data);
       })
-      .catch(error => {
+      .catch((error) => {
         console.error(error);
       });
   }, [reRender]);
 
-  useEffect(() => { //render all fav dishes of this user
+  useEffect(() => {
+    //render all fav dishes of this user
     axios({
-      method: 'post',
-      url: '/api/myFavDishes',
+      method: "post",
+      url: "/api/myFavDishes",
       data: {
-        id: userID
-      }
-  }) 
-    .then(response => {
-      setFavFoods(response.data);
+        id: userID,
+      },
     })
-    .catch(error => {
-      console.error(error);
-    }); }, [reRender]);
+      .then((response) => {
+        setFavFoods(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [reRender]);
 
   //clicked the remove button on a food item
-  const removeFood = (foodID)=> {
+  const removeFood = (foodID) => {
     // setReRender(!reRender);
     axios({
-      method: 'delete',
-      url: '/api/myFavDishes',
+      method: "delete",
+      url: "/api/myFavDishes",
       data: {
         Uid: userID,
-        Fid: foodID
-      }
-    }) 
-    .then(response => {
-      console.log("deleted %d, code: %s", foodID, response);
+        Fid: foodID,
+      },
     })
-    .catch(error => {
-      console.error(error);
-    });
-    
-    setReRender(!reRender); //to redisplay updated dishes
-    
-  };
-////////////
-  return (
-    <div className='myprofile'>
-     
+      .then((response) => {
+        console.log("deleted %d, code: %s", foodID, response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
 
+    setReRender(!reRender); //to redisplay updated dishes
+  };
+  ////////////
+  return (
+    <div className="myprofile">
       {/* My Favorite Dish */}
       <div>
         <h2>1. My Favorite Dish</h2>
         <input
-          type='text'
-          placeholder='Search for your favorite dish...'
+          type="text"
+          placeholder="Search for your favorite dish..."
+          value={typedText}
           onChange={handleSearchChange}
         />
-        <button type="submit"><i class="fa fa-search"></i></button>
+        <button type="submit">
+          <i class="fa fa-search"></i>
+        </button>
         {/* Connect to backend database to fetch favorite dish */}
       </div>
       <br></br>
+
+      {/* Search Result */}
+      <div>
+        <h3>Search Results:</h3>
+        {searchPerformed && matchMeals.length === 0 ? (
+          <p>No dishes found...</p>
+        ) : (
+          matchMeals.map((meal, index) => (
+            <div key={index} className="search-result">
+              <span>{meal.name}</span>
+              <button onClick={() => addToFavorites(userID, meal.id)}>
+                Add to Favorites
+              </button>
+            </div>
+          ))
+        )}
+      </div>
 
       {/* My Allergies */}
       <div>
         <h2>2. My Allergies</h2>
         <select onChange={handleAllergySelect}>
-          <option value=''>Select Allergy</option>
-          <option value='Peanuts'>Peanuts</option>
-          <option value='Shellfish'>Shellfish</option>
-          <option value='Gluten'>Gluten</option>
-          <option value='Eggs'>Eggs</option>
-          <option value='Diary'>Diary</option>
+          <option value="">Select Allergy</option>
+          <option value="Peanuts">Peanuts</option>
+          <option value="Shellfish">Shellfish</option>
+          <option value="Gluten">Gluten</option>
+          <option value="Eggs">Eggs</option>
+          <option value="Diary">Diary</option>
           {/* Add more allergy options */}
         </select>
         {/* Connect to backend database to fetch and save allergies */}
@@ -125,12 +198,33 @@ export default function Myprofile() {
       {/* My Health Goal */}
       <div>
         <h2>3. My Health Goal</h2>
-        <input type='radio' id='goal1' name='healthGoal' value='goal1' onChange={handleGoalSelect} />
-        <label htmlFor='goal1'>Increased energy levels:</label><br />
-        <input type='radio' id='goal2' name='healthGoal' value='goal2' onChange={handleGoalSelect} />
-        <label htmlFor='goal2'>Gain Muscle</label><br />
-        <input type='radio' id='goal3' name='healthGoal' value='goal3' onChange={handleGoalSelect} />
-        <label htmlFor='goal3'>Control Blood Sugar</label><br />
+        <input
+          type="radio"
+          id="goal1"
+          name="healthGoal"
+          value="goal1"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal1">Increased energy levels:</label>
+        <br />
+        <input
+          type="radio"
+          id="goal2"
+          name="healthGoal"
+          value="goal2"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal2">Gain Muscle</label>
+        <br />
+        <input
+          type="radio"
+          id="goal3"
+          name="healthGoal"
+          value="goal3"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal3">Control Blood Sugar</label>
+        <br />
         {/* Add more health goal options */}
       </div>
       {/* Connect to backend database to save selected health goal */}
@@ -142,32 +236,40 @@ export default function Myprofile() {
             <span className="item-likes">
               <i className="fas fa-heart"></i> {item.likes}
             </span>
-            <button type="submit"><i class="fa fa-search"></i></button>
+            <button type="submit">
+              <i class="fa fa-search"></i>
+            </button>
           </div>
         ))}
       </div>
 
-      
       <div>
-      <input
-          type='text'
-          placeholder='For now, input a user id number (1~6)'
+        <input
+          type="text"
+          placeholder="For now, input a user id number (1~6)"
           onChange={(event) => {
             // console.log(JSON.stringify(event.target.value));
             setUserID(Number(event.target.value));
             setReRender(!reRender);
           }}
         />
-      <h1> Your favorite foods</h1>
+        <h1> Your favorite foods</h1>
         {favFoods.map((item, index) => (
           <div className="item" key={index}>
             <span className="item-name">{item.name}</span>
             {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
-            
-            <button onClick={() => {removeFood(favFoods[index].id)}}> Remove </button>
+
+            <button
+              onClick={() => {
+                removeFood(favFoods[index].id);
+              }}
+            >
+              {" "}
+              Remove{" "}
+            </button>
           </div>
         ))}
-        </div>
+      </div>
     </div>
   );
 }
