@@ -156,19 +156,24 @@ async function meh() {
     if (!data) {
       return res.status(400).json({ error: 'No data passed' })
     }
-
+    console.log(data.name);
+    console.log(data.email);
     // data.name, data.email, data.picture for Google user profile data
 
-    const searchQuery = ``
+    const searchQuery = `SELECT id
+    FROM Users
+    WHERE email = '${data.email}';`
     // search if user email is in database
 
-    const updateQuery = ``
+    const updateQuery = `INSERT INTO Users (username, email) VALUES
+    ('${data.name}', '${data.email}');`
     // updates database with user data
 
     try {
-      const user = await db.execute(searchQuery)
+      const [user,fields] = await db.execute(searchQuery)
+      console.log(JSON.stringify(user))
 
-      if (!user) {
+      if (user.length==0) { //email DNE
         await db.execute(updateQuery)
       }
     }
@@ -189,7 +194,7 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Welcome2023!",
+    password: "12345678",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
@@ -219,7 +224,6 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Users ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
-   password VARCHAR(255) NOT NULL,
    email VARCHAR(255) NOT NULL UNIQUE
   );`; //creating a Users table
 
@@ -310,26 +314,26 @@ async function readData() {
   //probably where the web-scraping stuff goes
   //add some dummy data for now
 
-  //var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
+  var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
   var allergyIn = `INSERT INTO Allergies (name) VALUES 
   ('Contains alcohol'), 
   ('Contains Gluten'), 
-  ('Contains Peanut')
-  (Contains sesame),
-  (Contains soy),
-  (Contains tree nuts),
-  (Contains Wheat),
-  (Contains dairy),
-  (Contains egg),
-  (Contains fish),
-  (Contains shellfish)
+  ('Contains Peanut'),
+  ('Contains sesame'),
+  ('Contains soy'),
+  ('Contains tree nuts'),
+  ('Contains Wheat'),
+  ('Contains dairy'),
+  ('Contains egg'),
+  ('Contains fish'),
+  ('Contains shellfish')
   ;`;
   var dietIn = `INSERT INTO Diets (name) VALUES 
-    (Vegetarianegan),
-    (Vegetarian),
-    (Low Carbon Footprint),
-    (High Carbon Footprint),
-    (Halal menu option)
+    ('Vegetarianegan'),
+    ('Vegetarian'),
+    ('Low Carbon Footprint'),
+    ('High Carbon Footprint'),
+    ('Halal menu option')
 ;`;
   /*
   var foodIn =
@@ -343,13 +347,13 @@ async function readData() {
       ;`;
 */
 
-  var usersIn = `INSERT INTO Users (username, password, email, bio) VALUES 
-    ('blen', '12345678', 'blen@gmail.com', 'database nerd who has a bad gluten allergy'), 
-    ('Mashamellow', 'abcdefg', 'mellow@gmail.com', 'database nerd2 who likes ice cream'), 
-    ('Koopa', 'password', 'isaacishuman@yahoo.com', 'emacs lover that eats healthy'), 
-    ('zeeehan', 'idk', 'zen@gmail.com', 'frontend nerd1 who''s vegan and lactose intolerant'), 
-    ('0xyw', 'secret', 'erin@gmail.com', 'frontend nerd2 who likes ice cream but is lactose intolerant'),
-    ('Kyuki', '??????', 'kelvin@gmail.com', 'security nerd who likes everything')
+  var usersIn = `INSERT INTO Users (username, email) VALUES
+    ('blen', 'blen@gmail.com'),
+    ('Mashamellow', 'mellow@gmail.com'),
+    ('Koopa', 'isaacishuman@yahoo.com'),
+    ('zeeehan', 'zen@gmail.com'),
+    ('0xyw','erin@gmail.com'),
+    ('Kyuki','kelvin@gmail.com')
   ;`;
 
   var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
