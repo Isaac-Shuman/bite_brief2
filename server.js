@@ -163,8 +163,7 @@ async function initialize() {
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
    password VARCHAR(255) NOT NULL,
-   email VARCHAR(255) NOT NULL UNIQUE,
-   bio TEXT
+   email VARCHAR(255) NOT NULL UNIQUE
   );`; //creating a Users table
 
   var createAllergiesTable = `
@@ -251,12 +250,26 @@ try{
 async function readData(){
   //probably where the web-scraping stuff goes
   //add some dummy data for now
-  var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
-  var allergyIn = "INSERT INTO Allergies (name) VALUES ('dairy'), ('gluten'), ('eggs');";
-  var dietIn = `INSERT INTO Diets (name, description) VALUES 
-    ('healthy', 'what''s good for you'), 
-    ('processed', 'what''s probably not good for you'), 
-    ('vegan', 'no animal products')
+  //var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
+  var allergyIn = `INSERT INTO Allergies (name) VALUES 
+  ('Contains alcohol'), 
+  ('Contains Gluten'), 
+  ('Contains Peanut')
+  (Contains sesame),
+  (Contains soy),
+  (Contains tree nuts),
+  (Contains Wheat),
+  (Contains dairy),
+  (Contains egg),
+  (Contains fish),
+  (Contains shellfish)
+  ;`;
+  var dietIn = `INSERT INTO Diets (name) VALUES 
+    (Vegetarianegan),
+    (Vegetarian),
+    (Low Carbon Footprint),
+    (High Carbon Footprint),
+    (Halal menu option)
   ;`;
 
   var usersIn = `INSERT INTO Users (username, password, email, bio) VALUES 
