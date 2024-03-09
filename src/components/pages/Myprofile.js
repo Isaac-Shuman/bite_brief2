@@ -1,13 +1,168 @@
 import React from "react";
 import "../../App.css";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import "./Trending.css";
 import axios from "axios";
+import { SignInContext } from "../../App.js";
+
+function EnterDish({handleSearchChange}) {
+  return (
+  <>
+  <div>
+        <h2>1. My Favorite Dish</h2>
+        <input
+          type='text'
+          placeholder='Search for your favorite dish...'
+          onChange={handleSearchChange}
+        />
+        <button type="submit"><i class="fa fa-search"></i></button>
+        {/* Connect to backend database to fetch favorite dish */}
+  </div>
+  <br></br>
+  </>
+  );
+}
+
+function SelectAllergies({handleAllergySelect})
+{
+  return (
+    <>
+    <div>
+    <h2>2. My Allergies</h2>
+    <select onChange={handleAllergySelect}>
+      <option value="">Select Allergy</option>
+      <option value="Peanuts">Peanuts</option>
+      <option value="Shellfish">Shellfish</option>
+      <option value="Gluten">Gluten</option>
+      <option value="Eggs">Eggs</option>
+      <option value="Diary">Diary</option>
+      {/* Add more allergy options */}
+    </select>
+    {/* Connect to backend database to fetch and save allergies */}
+  </div>
+  <br></br>
+  </>
+
+  );
+}
+
+function DishSearchRes({searchPerformed, matchMeals, userID, addToFavorites})
+{
+  return (
+    <div>
+    <h3>Search Results:</h3>
+    {searchPerformed && matchMeals.length === 0 ? (
+      <p>No dishes found...</p>
+    ) : (
+      matchMeals.map((meal, index) => (
+        <div key={index} className="search-result">
+          <span>{meal.name}</span>
+          <button onClick={() => addToFavorites(userID, meal.id)}>
+            Add to Favorites
+          </button>
+        </div>
+      ))
+    )}
+  </div>
+  );
+}
+
+function HealthGoal({handleGoalSelect})
+{
+  return (
+  <div>
+        <h2>3. My Health Goal</h2>
+        <input
+          type="radio"
+          id="goal1"
+          name="healthGoal"
+          value="goal1"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal1">Increased energy levels:</label>
+        <br />
+        <input
+          type="radio"
+          id="goal2"
+          name="healthGoal"
+          value="goal2"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal2">Gain Muscle</label>
+        <br />
+        <input
+          type="radio"
+          id="goal3"
+          name="healthGoal"
+          value="goal3"
+          onChange={handleGoalSelect}
+        />
+        <label htmlFor="goal3">Control Blood Sugar</label>
+        <br />
+        {/* Add more health goal options */}
+          {/* Connect to backend database to save selected health goal */}
+  </div>
+  );
+}
+
+function Useless({matchMeals})
+{
+  return (
+  <div className="popular-items">
+        {matchMeals.map((item, index) => (
+          <div className="item" key={index}>
+            <span className="item-name">{item.name}</span>
+            <span className="item-likes">
+              <i className="fas fa-heart"></i> {item.likes}
+            </span>
+            <button type="submit">
+              <i class="fa fa-search"></i>
+            </button>
+          </div>
+        ))}
+  </div>
+  );
+}
+
+function YourFavorites({favFoods, setReRender, reRender, setUserID, removeFood})
+{
+  return (
+  <div>
+  <input
+    type="text"
+    placeholder="For now, input a user id number (1~6)"
+    onChange={(event) => {
+      // console.log(JSON.stringify(event.target.value));
+      setUserID(Number(event.target.value));
+      setReRender(!reRender);
+    }}
+  />
+  <h1> Your favorite foods</h1>
+  {favFoods.map((item, index) => (
+    <div className="item" key={index}>
+      <span className="item-name">{item.name}</span>
+      {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
+
+      <button
+        onClick={() => {
+          removeFood(favFoods[index].id);
+        }}
+      >
+        {" "}
+        Remove{" "}
+      </button>
+    </div>
+  ))}
+  </div>
+  );
+}
 
 export default function Myprofile() {
   const [typedText, setText] = useState("");
   const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
   const [searchPerformed, setSearchPerformed] = useState(false);
+
+  const loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
   const handleSearchChange = async (event) => {
@@ -144,132 +299,21 @@ export default function Myprofile() {
     setReRender(!reRender); //to redisplay updated dishes
   };
   ////////////
+  if (loggedin)
+  {
   return (
     <div className="myprofile">
-      {/* My Favorite Dish */}
-      <div>
-        <h2>1. My Favorite Dish</h2>
-        <input
-          type="text"
-          placeholder="Search for your favorite dish..."
-          value={typedText}
-          onChange={handleSearchChange}
-        />
-        <button type="submit">
-          <i class="fa fa-search"></i>
-        </button>
-        {/* Connect to backend database to fetch favorite dish */}
-      </div>
-      <br></br>
-
-      {/* Search Result */}
-      <div>
-        <h3>Search Results:</h3>
-        {searchPerformed && matchMeals.length === 0 ? (
-          <p>No dishes found...</p>
-        ) : (
-          matchMeals.map((meal, index) => (
-            <div key={index} className="search-result">
-              <span>{meal.name}</span>
-              <button onClick={() => addToFavorites(userID, meal.id)}>
-                Add to Favorites
-              </button>
-            </div>
-          ))
-        )}
-      </div>
-
-      {/* My Allergies */}
-      <div>
-        <h2>2. My Allergies</h2>
-        <select onChange={handleAllergySelect}>
-          <option value="">Select Allergy</option>
-          <option value="Peanuts">Peanuts</option>
-          <option value="Shellfish">Shellfish</option>
-          <option value="Gluten">Gluten</option>
-          <option value="Eggs">Eggs</option>
-          <option value="Diary">Diary</option>
-          {/* Add more allergy options */}
-        </select>
-        {/* Connect to backend database to fetch and save allergies */}
-      </div>
-      <br></br>
-
-      {/* My Health Goal */}
-      <div>
-        <h2>3. My Health Goal</h2>
-        <input
-          type="radio"
-          id="goal1"
-          name="healthGoal"
-          value="goal1"
-          onChange={handleGoalSelect}
-        />
-        <label htmlFor="goal1">Increased energy levels:</label>
-        <br />
-        <input
-          type="radio"
-          id="goal2"
-          name="healthGoal"
-          value="goal2"
-          onChange={handleGoalSelect}
-        />
-        <label htmlFor="goal2">Gain Muscle</label>
-        <br />
-        <input
-          type="radio"
-          id="goal3"
-          name="healthGoal"
-          value="goal3"
-          onChange={handleGoalSelect}
-        />
-        <label htmlFor="goal3">Control Blood Sugar</label>
-        <br />
-        {/* Add more health goal options */}
-      </div>
-      {/* Connect to backend database to save selected health goal */}
-
-      <div className="popular-items">
-        {matchMeals.map((item, index) => (
-          <div className="item" key={index}>
-            <span className="item-name">{item.name}</span>
-            <span className="item-likes">
-              <i className="fas fa-heart"></i> {item.likes}
-            </span>
-            <button type="submit">
-              <i class="fa fa-search"></i>
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <div>
-        <input
-          type="text"
-          placeholder="For now, input a user id number (1~6)"
-          onChange={(event) => {
-            // console.log(JSON.stringify(event.target.value));
-            setUserID(Number(event.target.value));
-            setReRender(!reRender);
-          }}
-        />
-        <h1> Your favorite foods</h1>
-        {favFoods.map((item, index) => (
-          <div className="item" key={index}>
-            <span className="item-name">{item.name}</span>
-            {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
-
-            <button
-              onClick={() => {
-                removeFood(favFoods[index].id);
-              }}
-            >
-              {" "}
-              Remove{" "}
-            </button>
-          </div>
-        ))}
-      </div>
+      <EnterDish handleSearchChange={handleSearchChange}/>
+      <DishSearchRes searchPerformed={searchPerformed} matchMeals={matchMeals} userID={userID} addToFavorites = {addToFavorites}/>
+      <SelectAllergies handleAllergySelect={handleAllergySelect}/>
+      <HealthGoal handleGoalSelect={handleGoalSelect}/>
+      <YourFavorites favFoods={favFoods} setReRender={setReRender} reRender={reRender} setUserID={setUserID} removeFood={removeFood}/>
     </div>
   );
+  }
+  else {
+    return (
+      <h1> Please login </h1>
+    )
+  }
 }
