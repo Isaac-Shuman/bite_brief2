@@ -13,6 +13,7 @@ app.use(bodyParser.json()); //necessary for it to process post request which con
 var curUserID = "";
 
 const mysql = require("mysql2/promise");
+const { type } = require("@testing-library/user-event/dist/type");
 meh();
 //async keyword lets you use 'await'
 async function meh() {
@@ -169,7 +170,8 @@ async function meh() {
 
 
     //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
-    searchQuery = `SELECT id 
+    //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
+    const searchQuery = `SELECT id 
     FROM Users
     WHERE email = '${data.email}';`
     // search if user email is in database
@@ -180,14 +182,18 @@ async function meh() {
 
     try {
       const [user,fields] = await db.execute(searchQuery)
-      //BEATRICE. plz set curUserID to whatever userID you want here
-      console.log(JSON.stringify(user))
 
       if (user.length==0) { //email DNE
         await db.execute(updateQuery)
       }
+      const [u,f] = await db.execute(searchQuery)
+      // console.log(typeof(u))
+      // console.log(u)
+      curUserID = Number(u[0]['id'])
+      console.log(curUserID)
     }
     catch (error) {
+      console.log(error.code)
       res.status(400).json(error)
     }
   })  
@@ -204,8 +210,8 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Fizzy19123",
-    database: "a_database", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    password: "12345678",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);

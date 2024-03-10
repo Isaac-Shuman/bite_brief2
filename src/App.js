@@ -38,8 +38,9 @@ function App() {
       url: "/api/user", 
     })
       .then((response) => {
-        setUserID(response.data.userID);
-        console.log("User id is %s", userID)
+        console.log("recieved id %s", JSON.stringify(response.data))
+        setUserID(Number(response.data.userID));
+        console.log("User id is %d", userID)
       })
       .catch((error) => {
         console.error(error);
