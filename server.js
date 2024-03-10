@@ -5,7 +5,7 @@
 const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
-//const csv = require("fast-csv") //to parse the csv 
+const csv = require("fast-csv") //to parse the csv 
 const fs = require("fs") //to be able to gain acsess to the csv file
 
 var bodyParser = require("body-parser");
@@ -313,7 +313,8 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
 }
 
 async function InsertNameIntoFoods(food_name) {
-  await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name])
+  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в зелпер таблицу
+  return result.insertId;
 }
 
 async function readData() {
@@ -340,6 +341,28 @@ async function readData() {
     ('High Carbon Footprint'),
     ('Halal menu option')
 ;`;
+
+//Now here will go the code for reading some data from the csv file and putting it into the Foods table:
+fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, data) => 
+{
+  if (err) {
+    console.error("error while reading the file", err)
+    return;
+  }
+  csv.parseString(data, {headers: true}) //starting to parse
+    .on('data', async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
+      const food_name = row.dish_name;
+      const inserted_food_id = InsertNameIntoFoods(food_name);
+      //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
+    })
+}
+
+
+
+)
+
+
+
   /*
   var foodIn =
     "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
