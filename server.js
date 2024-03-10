@@ -5,6 +5,8 @@
 const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
+//const csv = require("fast-csv") //to parse the csv 
+const fs = require("fs") //to be able to gain acsess to the csv file
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -310,11 +312,15 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   return connection;
 }
 
+async function InsertNameIntoFoods(food_name) {
+  await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name])
+}
+
 async function readData() {
   //probably where the web-scraping stuff goes
   //add some dummy data for now
 
-  var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
+  //var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
   var allergyIn = `INSERT INTO Allergies (name) VALUES 
   ('Contains alcohol'), 
   ('Contains Gluten'), 
@@ -329,7 +335,6 @@ async function readData() {
   ('Contains shellfish')
   ;`;
   var dietIn = `INSERT INTO Diets (name) VALUES 
-    ('Vegetarianegan'),
     ('Vegetarian'),
     ('Low Carbon Footprint'),
     ('High Carbon Footprint'),
