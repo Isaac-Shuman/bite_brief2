@@ -270,6 +270,12 @@ async function initialize() {
    description TEXT
   );`; //creating a Diets table
 
+  var createMealPeriodTable = `
+  CREATE TABLE MealPeriod (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT, 
+    name VARCHAR(50) NOT NULL UNIQUE,
+    );`; //creating Meal Period table
+
   ///////Helper tables
   var createFoodsUsersTable = `
   CREATE TABLE IF NOT EXISTS Foods_Users (
@@ -317,6 +323,15 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   UNIQUE(diet_id, food_id)
 );`; //helper table
 
+var createFoodsMealPeriodTable = `
+  CREATE TABLE IF NOT EXISTS Foods_MealPeriod (
+     food_id BIGINT,
+     meal_id BIGINT,
+     FOREIGN KEY (food_id) REFERENCES Foods(id),
+     FOREIGN KEY (meal_id) REFERENCES MealPeriod(id),
+     UNIQUE(food_id, meal_id)
+  );`; //helper table
+
   try {
     const [rFoods, fFoods] = await connection.execute(createFoodsTable);
     const [rUsers, fUsers] = await connection.execute(createUsersTable);
@@ -324,11 +339,13 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
       createAllergiesTable
     );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
+    const [rMealPeriod, fMealPeriod] = await connection.execute(createMealPeriodTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
     await connection.execute(createDietsFoodsTable);
+    await connection.execute(createFoodsMealPeriodTable);
 
     console.log("Tables created successfully");
   } catch (err) {
