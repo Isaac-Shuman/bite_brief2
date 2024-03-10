@@ -64,6 +64,34 @@ async function meh() {
     }
   });
 
+  app.get("/api/recommendedDishes", async (req, res) => {
+    const { userID } = req.query; // Extracting userID from query parameters
+
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
+
+    // SQL query to find foods that the user is not allergic to
+    const sql = `
+        SELECT Foods.name 
+        FROM Foods 
+        WHERE Foods.id NOT IN (
+            SELECT food_id 
+            FROM Allergies_Foods 
+            JOIN Allergies_Users ON Allergies_Foods.allergy_id = Allergies_Users.allergy_id 
+            WHERE Allergies_Users.user_id = ?
+        );
+    `;
+
+    try {
+      const [foods] = await db.execute(sql, [userID]); // Pass userID to the query
+      res.json(foods); // Send the retrieved foods back to the client
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Error retrieving recommended dishes" });
+    }
+  });
+
   app.post("/api/favdishes", async (req, res) => {
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
