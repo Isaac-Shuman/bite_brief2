@@ -229,7 +229,7 @@ export default function Myprofile() {
       </div>
       {/* Connect to backend database to save selected health goal */}
 
-      <div className="popular-items">
+      {/* <div className="popular-items">
         {matchMeals.map((item, index) => (
           <div className="item" key={index}>
             <span className="item-name">{item.name}</span>
@@ -241,7 +241,7 @@ export default function Myprofile() {
             </button>
           </div>
         ))}
-      </div>
+      </div> */}
 
       <div>
         <input
