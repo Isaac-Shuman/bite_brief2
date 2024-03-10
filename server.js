@@ -270,7 +270,7 @@ async function initialize() {
    description TEXT
   );`; //creating a Diets table
 
-  var createMealPeriodTable = `
+  var createMealPeriodsTable = `
   CREATE TABLE MealPeriod (
     id BIGINT PRIMARY KEY AUTO_INCREMENT, 
     name VARCHAR(50) NOT NULL UNIQUE,
@@ -323,7 +323,7 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   UNIQUE(diet_id, food_id)
 );`; //helper table
 
-var createFoodsMealPeriodTable = `
+var createFoodsMealPeriodsTable = `
   CREATE TABLE IF NOT EXISTS Foods_MealPeriod (
      food_id BIGINT,
      meal_id BIGINT,
@@ -339,13 +339,13 @@ var createFoodsMealPeriodTable = `
       createAllergiesTable
     );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
-    const [rMealPeriod, fMealPeriod] = await connection.execute(createMealPeriodTable);
+    const [rMealPeriod, fMealPeriod] = await connection.execute(createMealPeriodsTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
     await connection.execute(createDietsFoodsTable);
-    await connection.execute(createFoodsMealPeriodTable);
+    await connection.execute(createFoodsMealPeriodsTable);
 
     console.log("Tables created successfully");
   } catch (err) {
@@ -356,10 +356,15 @@ var createFoodsMealPeriodTable = `
 
   return connection;
 }
-
+//here we have some helper functions for filling tables
 async function InsertNameIntoFoods(food_name) {
-  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в зелпер таблицу
+  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
   return result.insertId;
+}
+
+async function InsertNameIntoMealPeriods(mealPeriod_name) {
+  const [result] = await db.execute('INSERT INTO MealPeriods (name) VALUES (?)', [mealPeriod_name]) 
+  return result.insertId; //возможно сюда надо будет вставить обрпботку ошибок типа что если не вставилось в таблицу
 }
 
 async function readData() {
@@ -397,8 +402,17 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
   csv.parseString(data, {headers: true}) //starting to parse
     .on('data', async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
       const food_name = row.dish_name;
+      const mealPeriod_name = row.meal_period;
       const inserted_food_id = InsertNameIntoFoods(food_name);
+      const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
       //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
+      for (const header_csv of Object.keys(row)){
+        if (header_csv.startsWith("Tag"))
+        {
+          const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
+          //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+        }
+      }
     })
 }
 
