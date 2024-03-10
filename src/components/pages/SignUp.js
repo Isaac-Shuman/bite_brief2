@@ -9,19 +9,18 @@ export default function SignUp() {
 
   /*TODO: Update UI, Add cookies */
 
-  const login = (response) => {
-    setUser(jwtDecode(response.credential))
+  const login = async (response) => {
+    setUser(await jwtDecode(response.credential))
 
     axios
       .post('/api/signup', {
-        data: user,
+        data: await jwtDecode(response.credential),
       })
       .then((response) => {})
       .catch((error) => {
         console.log(error)
       })
   }
-
   console.log(user.email)
 
   return (
