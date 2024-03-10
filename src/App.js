@@ -7,7 +7,8 @@ import Trending from './components/pages/Trending';
 import Home from './components/pages/Home';
 import SignUp from './components/pages/SignUp';
 import AboutUs from './components/pages/AboutUs';
-import { createContext} from 'react'
+import { createContext, useEffect, useState} from 'react'
+import axios from "axios";
 
 export const SignInContext = createContext(false);
 
@@ -19,7 +20,32 @@ function WrappedProfile()
     </SignInContext.Provider>
   );
 }
+
+function SignInWithState()
+{
+  
+  return (
+    <SignUp />
+  )
+}
 function App() {
+  const [userID, setUserID] = useState(0);
+  const [user, setUser] = useState([])
+  useEffect(() => {
+    //initially render all dishes(trending)
+    axios({
+      method: "get",
+      url: "/api/user", 
+    })
+      .then((response) => {
+        setUserID(response.data.userID);
+        console.log("User id is %s", userID)
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [user]);
+
   return (
     <>
       <Router>
@@ -28,7 +54,9 @@ function App() {
           <Route path='/' exact component={Home} />
           <Route path='/myprofile' component={WrappedProfile} />
           <Route path='/trending' component={Trending} />
-          <Route path='/sign-up' component={SignUp} />
+          <Route path='/sign-up' exact render={() => 
+            <SignUp user={user} setUser={setUser}/>
+          } />
           <Route path="/aboutus" component={AboutUs} />
 
         </Switch>

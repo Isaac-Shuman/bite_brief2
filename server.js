@@ -10,6 +10,8 @@ var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); //necessary for it to process post request which contain data
 
+var curUserID = "";
+
 const mysql = require("mysql2/promise");
 meh();
 //async keyword lets you use 'await'
@@ -42,6 +44,11 @@ async function meh() {
       console.error(err);
       res.status(500).send("An error occurred while searching");
     }
+  });
+
+  app.get("/api/user", async (req, res) => {
+    const data = {userID: curUserID}
+    res.json(data);
   });
 
   //add searching result(fav dish) to database
@@ -160,7 +167,9 @@ async function meh() {
     console.log(data.email);
     // data.name, data.email, data.picture for Google user profile data
 
-    const searchQuery = `SELECT id
+
+    //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
+    searchQuery = `SELECT id 
     FROM Users
     WHERE email = '${data.email}';`
     // search if user email is in database
@@ -171,6 +180,7 @@ async function meh() {
 
     try {
       const [user,fields] = await db.execute(searchQuery)
+      //BEATRICE. plz set curUserID to whatever userID you want here
       console.log(JSON.stringify(user))
 
       if (user.length==0) { //email DNE

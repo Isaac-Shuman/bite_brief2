@@ -4,8 +4,7 @@ import { jwtDecode } from 'jwt-decode'
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-export default function SignUp() {
-  const [user, setUser] = useState([])
+export default function SignUp({user, setUser}) {
 
   /*TODO: Update UI, Add cookies */
 
