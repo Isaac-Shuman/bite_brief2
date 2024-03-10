@@ -324,7 +324,7 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
 );`; //helper table
 
 var createFoodsMealPeriodsTable = `
-  CREATE TABLE IF NOT EXISTS Foods_MealPeriod (
+  CREATE TABLE IF NOT EXISTS Foods_MealPeriods (
      food_id BIGINT,
      meal_id BIGINT,
      FOREIGN KEY (food_id) REFERENCES Foods(id),
@@ -367,6 +367,32 @@ async function InsertNameIntoMealPeriods(mealPeriod_name) {
   return result.insertId; //возможно сюда надо будет вставить обрпботку ошибок типа что если не вставилось в таблицу
 }
 
+async function InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id) {
+  const [result] = await db.execute('INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?)', [inserted_food_id, inserted_meal_id]);
+}
+
+async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it found or null
+  const [allergies] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [allergie_name]);
+  if (allergies.length > 0){
+    const FoundAllergieID = allergies[0].id;
+    return FoundAllergieID;
+  }
+  else {
+    return null;
+  }
+}
+
+async function findADiet(allergie_name){ //returns an ID of the Allergie it found or null
+  const [diets] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [diet_name]);
+  if (diets.length > 0){
+    const FoundDietID = diets[0].id;
+    return FoundDietID;
+  }
+  else {
+    return null;
+  }
+}
+
 async function readData() {
   //probably where the web-scraping stuff goes
   //add some dummy data for now
@@ -406,12 +432,14 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       const inserted_food_id = InsertNameIntoFoods(food_name);
       const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
       //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
+      InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
       for (const header_csv of Object.keys(row)){
         if (header_csv.startsWith("Tag"))
         {
           const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
           //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
         }
+
       }
     })
 }
