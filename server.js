@@ -371,6 +371,14 @@ async function InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_me
   const [result] = await db.execute('INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?)', [inserted_food_id, inserted_meal_id]);
 }
 
+async function InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_allergie_id) {
+  const [result] = await db.execute('INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES (?, ?)', [inserted_allergie_id, inserted_food_id]);
+}
+
+async function InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id) {
+  const [result] = await db.execute('INSERT INTO Diets_Foods (inserted_diet_id, food_id) VALUES (?, ?)', [inserted_diet_id, inserted_food_id]);
+}
+
 async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it found or null
   const [allergies] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [allergie_name]);
   if (allergies.length > 0){
@@ -381,7 +389,7 @@ async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it
     return null;
   }
 }
-
+//может их совместить?
 async function findADiet(allergie_name){ //returns an ID of the Allergie it found or null
   const [diets] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [diet_name]);
   if (diets.length > 0){
@@ -426,7 +434,10 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
     return;
   }
   csv.parseString(data, {headers: true}) //starting to parse
-    .on('data', async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
+    .on("data", async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
+      //важно понимать, что row - это аргумент вот этой далее представленной async функции и он 
+      //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
+      //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
       const food_name = row.dish_name;
       const mealPeriod_name = row.meal_period;
       const inserted_food_id = InsertNameIntoFoods(food_name);
@@ -438,9 +449,21 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
         {
           const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
           //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+          const inserted_allergie_id = findAnAllergie(tag);
+          const inserted_diet_id = findADiet(tag);
+          if (inserted_allergie_id) {
+            //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+            InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_allergie_id);
+          }
+          if (inserted_diet_id) {
+            //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+            InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id);
+          }
         }
-
       }
+    })
+    .on("end", () => {
+      console.log("done parsing and filling tables")
     })
 }
 
