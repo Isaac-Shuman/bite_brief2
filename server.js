@@ -360,13 +360,16 @@ var createFoodsMealPeriodsTable = `
 }
 //here we have some helper functions for filling tables
 async function InsertNameIntoFoods(food_name) {
-  const [existing_food] = await db.execute("SELECT id FROM MealPeriods WHERE name = (?)", [food_name]);
+  console.log("food name: ", food_name);
+  const [existing_food] = await db.execute("SELECT id FROM Foods WHERE name = (?)", [food_name]);
   if(existing_food.length === 0)
   {
+    console.log("food does not exist yet", food_name);
     const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
     return result.insertId;
   }
   else {
+    console.log("food already exists", food_name);
     return existing_food[0].id;
   }
 }
@@ -385,7 +388,7 @@ async function InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_alle
 }
 
 async function InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id) {
-  const [result] = await db.execute('INSERT INTO Diets_Foods (inserted_diet_id, food_id) VALUES (?, ?)', [inserted_diet_id, inserted_food_id]);
+  const [result] = await db.execute('INSERT INTO Diets_Foods (diet_id, food_id) VALUES (?, ?)', [inserted_diet_id, inserted_food_id]);
 } 
 
 //findAMealPeriod
@@ -411,7 +414,7 @@ async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it
   }
 }
 //может их совместить?
-async function findADiet(diet_name){ //returns an ID of the Allergie it found or null
+async function findADiet(diet_name){ 
   const [diets] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [diet_name]);
   if (diets.length > 0){
     const FoundDietID = diets[0].id;
@@ -465,7 +468,6 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
       //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
       const food_name = row.dish_name;
-      console.log("Food name", food_name);
       //const mealPeriod_name = row.meal_period;
       const inserted_food_id = await InsertNameIntoFoods(food_name);
       //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
@@ -478,7 +480,7 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
             const mealPeriod = row[header_csv];
             const MealPeriod_id = await findAMealPeriod(mealPeriod);
             if (MealPeriod_id) {
-              InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
+              await InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
             }
           }
           if (header_csv.startsWith("Tag"))
@@ -489,10 +491,10 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
             const Diet_id = await findADiet(tag);
             if (Allergie_id) {
               //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-              InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
+              await InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
             }
             if (Diet_id) {
-              InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+              await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
             }
           }
         }
