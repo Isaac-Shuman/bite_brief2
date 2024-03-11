@@ -223,9 +223,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "Mashamellow",
+    password: "mY7733203***",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -407,7 +407,7 @@ async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it
 }
 //может их совместить?
 async function findADiet(diet_name){ //returns an ID of the Allergie it found or null
-  const [diets] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [diet_name]);
+  const [diets] = await db.execute("SELECT id FROM Diets WHERE name = (?)", [diet_name]);
   if (diets.length > 0){
     const FoundDietID = diets[0].id;
     return FoundDietID;
