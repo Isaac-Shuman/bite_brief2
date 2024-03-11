@@ -247,7 +247,7 @@ async function initialize() {
   var createFoodsTable = `
   CREATE TABLE Foods (
     id BIGINT PRIMARY KEY AUTO_INCREMENT, 
-    name VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL UNIQUE,
     available BOOL DEFAULT 1,
     likes BIGINT DEFAULT 0
     );`; //creating Foods table
@@ -360,14 +360,21 @@ var createFoodsMealPeriodsTable = `
 }
 //here we have some helper functions for filling tables
 async function InsertNameIntoFoods(food_name) {
-  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
-  return result.insertId;
+  const [existing_food] = await db.execute("SELECT id FROM MealPeriods WHERE name = (?)", [food_name]);
+  if(existing_food.length === 0)
+  {
+    const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?)', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
+    return result.insertId;
+  }
+  else {
+    return null;
+  }
 }
 
-async function InsertNameIntoMealPeriods(mealPeriod_name) {
+/*async function InsertNameIntoMealPeriods(mealPeriod_name) {
   const [result] = await db.execute('INSERT INTO MealPeriods (name) VALUES (?)', [mealPeriod_name]) 
   return result.insertId; //возможно сюда надо будет вставить обрпботку ошибок типа что если не вставилось в таблицу
-}
+}*/
 
 async function InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id) {
   const [result] = await db.execute('INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?)', [inserted_food_id, inserted_meal_id]);
@@ -458,32 +465,36 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
       //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
       const food_name = row.dish_name;
+      console.log("Food name", food_name);
       //const mealPeriod_name = row.meal_period;
-      const inserted_food_id = InsertNameIntoFoods(food_name);
+      const inserted_food_id = await InsertNameIntoFoods(food_name);
       //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
       //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
       //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
-      for (const header_csv of Object.keys(row)){
-        if (header_csv === "meal_period") 
-        {
-          const mealPeriod = row[header_csv];
-          const MealPeriod_id = findAMealPeriod(mealPeriod);
-          if (MealPeriod_id) {
-            InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
+      if (inserted_food_id)
+      {
+        for (const header_csv of Object.keys(row)){
+          if (header_csv === "meal_period") 
+          {
+            const mealPeriod = row[header_csv];
+            const MealPeriod_id = await findAMealPeriod(mealPeriod);
+            if (MealPeriod_id) {
+              InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
+            }
           }
-        }
-        if (header_csv.startsWith("Tag"))
-        {
-          const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
-          //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
-          const Allergie_id = findAnAllergie(tag);
-          const Diet_id = findADiet(tag);
-          if (Allergie_id) {
-            //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-            InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
-          }
-          if (Diet_id) {
-            InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+          if (header_csv.startsWith("Tag"))
+          {
+            const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
+            //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+            const Allergie_id = await findAnAllergie(tag);
+            const Diet_id = await findADiet(tag);
+            if (Allergie_id) {
+              //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+              InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
+            }
+            if (Diet_id) {
+              InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+            }
           }
         }
       }
