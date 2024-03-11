@@ -460,6 +460,9 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
       //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
       const food_name = row.dish_name;
+      if (food_name.startsWith("w/")){
+        return;
+      }
       console.log("Food name", food_name);
       //const mealPeriod_name = row.meal_period;
       const inserted_food_id = await InsertNameIntoFoods(food_name);
