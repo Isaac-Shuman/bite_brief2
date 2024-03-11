@@ -9,6 +9,7 @@ import SignUp from './components/pages/SignUp';
 import AboutUs from './components/pages/AboutUs';
 import { createContext, useEffect, useState} from 'react'
 import axios from "axios";
+import Cookies from "js-cookie";
 
 export const SignInContext = createContext(false);
 
@@ -30,7 +31,7 @@ function SignInWithState()
 }
 function App() {
   const [userID, setUserID] = useState(0);
-  const [user, setUser] = useState([])
+  const [user, setUser] = useState([]);
   useEffect(() => {
     //initially render all dishes(trending)
     axios({
@@ -38,9 +39,10 @@ function App() {
       url: "/api/user", 
     })
       .then((response) => {
-        console.log("recieved id %s", JSON.stringify(response.data))
+        console.log("recieved id %s", JSON.stringify(response.data));
         setUserID(Number(response.data.userID));
-        console.log("User id is %d", userID)
+        console.log(JSON.stringify(Cookies.get('curUserID')));
+        //console.log("User id is %d", userID);
       })
       .catch((error) => {
         console.error(error);

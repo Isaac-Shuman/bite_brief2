@@ -9,8 +9,10 @@ const port = 3001; //arbitrary
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); //necessary for it to process post request which contain data
+var cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
-var curUserID = "";
+
 
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
@@ -18,7 +20,6 @@ meh();
 //async keyword lets you use 'await'
 async function meh() {
   //because await can't be used in top-level, so let's make a function...
-
   //"wait" for these commands to return instead of executing synchronously
   //wow that was an awfully long time spent debugging and googling
   db = await initialize();
@@ -48,7 +49,8 @@ async function meh() {
   });
 
   app.get("/api/user", async (req, res) => {
-    const data = {userID: curUserID}
+    const data = {userID: JSON.parse(req.cookies.curUserID)}
+    console.log("THE cookies value on the server is now %i", JSON.parse(req.cookies.curUserID));
     res.json(data);
   });
 
@@ -62,7 +64,7 @@ async function meh() {
 
     try {
       var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; // This SQL prevents duplicates
-      await db.execute(sql, [userID, foodID]);
+      await db.execute(sql, [JSON.parse(req.cookies.curUserID), foodID]);
       res.json({ message: "Favorite added successfully." });
     } catch (err) {
       console.error("Error adding favorite:", err);
@@ -122,9 +124,9 @@ async function meh() {
   FROM Foods
   JOIN Foods_Users ON Foods_Users.food_id = Foods.id
   JOIN Users ON Foods_Users.user_id = Users.id
-  WHERE Users.id = ${userID};`;
+  WHERE Users.id = ${JSON.parse(req.cookies.curUserID)};`;
 
-    console.log(userID);
+    //console.log(userID);
 
     var response = "";
     try {
@@ -141,7 +143,7 @@ async function meh() {
     const foodID = req.body.Fid;
     const userID = req.body.Uid;
     var sql1 = `DELETE FROM Foods_Users
-    WHERE user_id = ${userID} AND food_id = ${foodID};`;
+    WHERE user_id = ${JSON.parse(req.cookies.curUserID)} AND food_id = ${foodID};`;
     var sql2 = `UPDATE Foods SET likes = likes - 1
     WHERE id = ${foodID};`; //also update like count
 
@@ -189,8 +191,10 @@ async function meh() {
       const [u,f] = await db.execute(searchQuery)
       // console.log(typeof(u))
       // console.log(u)
-      curUserID = Number(u[0]['id'])
-      console.log(curUserID)
+      const curUserID = Number(u[0]['id']) //IS THIS QUERY reliable
+      res.clearCookie('curUserID')
+      res.cookie('curUserID', curUserID)
+      console.log("THE cookies value on the server is set to %i", JSON.parse(req.cookies.curUserID));
     }
     catch (error) {
       console.log(error.code)
@@ -210,8 +214,8 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    password: "Fizzy19123",
+    database: "a_database", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
