@@ -4,23 +4,21 @@ import { jwtDecode } from 'jwt-decode'
 import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 
-export default function SignUp({user, setUser}) {
+export default function SignUp({loggedIn, setLoggedIn}) {
 
   /*TODO: Update UI, Add cookies */
 
   const login = async (response) => {
-    setUser(await jwtDecode(response.credential))
-
     axios
-      .post('/api/signup', {
+      .post('/api/user', {
         data: await jwtDecode(response.credential),
       })
-      .then((response) => {})
+      .then((response) => {setLoggedIn(true)})
       .catch((error) => {
         console.log(error)
       })
+    
   }
-  console.log(user.email)
 
   return (
     <div>

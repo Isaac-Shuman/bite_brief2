@@ -30,22 +30,21 @@ function SignInWithState()
 }
 function App() {
   const [userID, setUserID] = useState(0);
-  const [user, setUser] = useState([])
+  const [loggedIn, setLoggedIn] = useState(false)
   useEffect(() => {
-    //initially render all dishes(trending)
     axios({
       method: "get",
-      url: "/api/user", 
+      url: "/api/user/uid", 
     })
       .then((response) => {
         console.log("recieved id %s", JSON.stringify(response.data))
-        setUserID(Number(response.data.userID));
-        console.log("User id is %d", userID)
+        //setUserID(Number(response.data.userID));
+        //console.log("User id is %d", userID)
       })
       .catch((error) => {
         console.error(error);
       });
-  }, [user]);
+  }, [loggedIn]);
 
   return (
     <>
@@ -56,7 +55,7 @@ function App() {
           <Route path='/myprofile' component={WrappedProfile} />
           <Route path='/trending' component={Trending} />
           <Route path='/sign-up' exact render={() => 
-            <SignUp user={user} setUser={setUser}/>
+            <SignUp loggedIn={loggedIn} setLoggedIn={setLoggedIn}/>
           } />
           <Route path="/aboutus" component={AboutUs} />
 

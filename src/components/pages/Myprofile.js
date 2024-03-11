@@ -203,7 +203,7 @@ export default function Myprofile() {
       console.log("Adding to favorites:", { userID, foodID });
 
       // Using Axios to send a POST request
-      const response = await axios.post("/api/addToFavorites", {
+      const response = await axios.post("/api/user/addToFavorites", {
         userID, // Assuming userID is already defined and valid
         foodID,
       });
@@ -248,7 +248,7 @@ export default function Myprofile() {
     //initially render all dishes(trending)
     axios({
       method: "post",
-      url: "/api/favdishes", //url: '/api/profile',
+      url: "/api/user/favdishes", //url: '/api/profile',
       data: {
         // meal: typedText
       },
@@ -265,7 +265,7 @@ export default function Myprofile() {
     //render all fav dishes of this user
     axios({
       method: "post",
-      url: "/api/myFavDishes",
+      url: "/api/user/myFavDishes",
       data: {
         id: userID,
       },
@@ -283,7 +283,7 @@ export default function Myprofile() {
     // setReRender(!reRender);
     axios({
       method: "delete",
-      url: "/api/myFavDishes",
+      url: "/api/user/myFavDishes",
       data: {
         Uid: userID,
         Fid: foodID,
@@ -304,7 +304,7 @@ export default function Myprofile() {
   return (
     <div className="myprofile">
       <EnterDish handleSearchChange={handleSearchChange}/>
-      <DishSearchRes searchPerformed={searchPerformed} matchMeals={matchMeals} userID={userID} addToFavorites = {addToFavorites}/>
+      <DishSearchRes searchPerformed={searchPerformed} matchMeals={matchMeals} userID={userID} addToFavorites ={addToFavorites}/>
       <SelectAllergies handleAllergySelect={handleAllergySelect}/>
       <HealthGoal handleGoalSelect={handleGoalSelect}/>
       <YourFavorites favFoods={favFoods} setReRender={setReRender} reRender={reRender} setUserID={setUserID} removeFood={removeFood}/>

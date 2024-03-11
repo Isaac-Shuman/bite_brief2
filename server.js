@@ -9,8 +9,10 @@ const port = 3001; //arbitrary
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); //necessary for it to process post request which contain data
+var cookieParser = require("cookie-parser");
+app.use(cookieParser());
 
-var curUserID = "";
+var curUserID = "dog";
 
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
@@ -47,14 +49,16 @@ async function meh() {
     }
   });
 
-  app.get("/api/user", async (req, res) => {
-    const data = {userID: curUserID}
+  app.get("/api/user/uid", async (req, res) => {
+    const data = {userID: req.cookies.curUserId}
     res.json(data);
   });
 
   //add searching result(fav dish) to database
-  app.post("/api/addToFavorites", async (req, res) => {
+  app.post("/api/user/addToFavorites", async (req, res) => {
     const { userID, foodID } = req.body; // Extract userId and foodId from the request body
+
+    console.log("cookie in addToFavorites is storing %s", req.cookies);
 
     if (!userID || !foodID) {
       return res.status(400).json({ message: "Missing user ID or food ID" });
@@ -70,7 +74,7 @@ async function meh() {
     }
   });
 
-  app.post("/api/favdishes", async (req, res) => {
+  app.post("/api/user/favdishes", async (req, res) => {
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
     // const meal = req.body.meal;
@@ -116,7 +120,7 @@ async function meh() {
     res.json(data);
   });
 
-  app.post("/api/myFavDishes", async (req, res) => {
+  app.post("/api/user/myFavDishes", async (req, res) => {
     const userID = req.body.id;
     var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
@@ -124,7 +128,8 @@ async function meh() {
   JOIN Users ON Foods_Users.user_id = Users.id
   WHERE Users.id = ${userID};`;
 
-    console.log(userID);
+    console.log("userID when requesting favdishes: %s", userID);
+    console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -137,9 +142,13 @@ async function meh() {
     res.json(response);
   });
 
-  app.delete("/api/myFavDishes", async (req, res) => {
+  app.delete("/api/user/myFavDishes", async (req, res) => {
     const foodID = req.body.Fid;
     const userID = req.body.Uid;
+
+    console.log("cookie in delete is storing %s", req.cookies);
+
+
     var sql1 = `DELETE FROM Foods_Users
     WHERE user_id = ${userID} AND food_id = ${foodID};`;
     var sql2 = `UPDATE Foods SET likes = likes - 1
@@ -158,14 +167,14 @@ async function meh() {
     return;
   });
 
-  app.post('/api/signup', async (req, res) => {
+  app.post('/api/user', async (req, res) => {
     const {data} = req.body
 
     if (!data) {
       return res.status(400).json({ error: 'No data passed' })
     }
-    console.log(data.name);
-    console.log(data.email);
+    console.log("name received by api/signup: %s", data.name);
+    console.log("email received by api/signup %s", data.email);
     // data.name, data.email, data.picture for Google user profile data
 
 
@@ -189,13 +198,17 @@ async function meh() {
       const [u,f] = await db.execute(searchQuery)
       // console.log(typeof(u))
       // console.log(u)
-      curUserID = Number(u[0]['id'])
-      console.log(curUserID)
+      var cuid = Number(u[0]['id'])
+      res.cookie("curUserId", cuid);
+      console.log("curUserID dredged from database in api/signup %s", cuid);
+      
     }
     catch (error) {
       console.log(error.code)
       res.status(400).json(error)
     }
+
+    res.send("success")
   })  
 
   app.listen(port, () => {
@@ -210,8 +223,8 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    password: "Fizzy19123",
+    database: "a_database", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
