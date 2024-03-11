@@ -6,6 +6,9 @@ const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
 const email_rate = 10000; //every 10 s, low for testing
+const csv = require("fast-csv") //to parse the csv 
+const fs = require("fs") //to be able to gain acsess to the csv file
+
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -230,9 +233,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "Mashamellow",
+    password: "mY7733203***",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -243,16 +246,18 @@ async function initialize() {
   await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Foods;");
+  await connection.execute("DROP TABLE IF EXISTS Foods_MealPeriods;");
 
   await connection.execute("DROP TABLE IF EXISTS Foods;"); //delete it if it already exists, for now
   await connection.execute("DROP TABLE IF EXISTS Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies;");
   await connection.execute("DROP TABLE IF EXISTS Diets;");
+  await connection.execute("DROP TABLE IF EXISTS MealPeriods;"); //MealPeriod
 
   var createFoodsTable = `
   CREATE TABLE Foods (
     id BIGINT PRIMARY KEY AUTO_INCREMENT, 
-    name VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(255) NOT NULL UNIQUE,
     available BOOL DEFAULT 1,
     likes BIGINT DEFAULT 0
     );`; //creating Foods table
@@ -277,6 +282,12 @@ async function initialize() {
    name VARCHAR(255) NOT NULL UNIQUE,
    description TEXT
   );`; //creating a Diets table
+
+  var createMealPeriodsTable = `
+  CREATE TABLE MealPeriods (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT, 
+    name VARCHAR(50) NOT NULL UNIQUE
+    );`; //creating Meal Period table
 
   ///////Helper tables
   var createFoodsUsersTable = `
@@ -325,6 +336,15 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   UNIQUE(diet_id, food_id)
 );`; //helper table
 
+var createFoodsMealPeriodsTable = `
+  CREATE TABLE IF NOT EXISTS Foods_MealPeriods (
+     food_id BIGINT,
+     meal_id BIGINT,
+     FOREIGN KEY (food_id) REFERENCES Foods(id),
+     FOREIGN KEY (meal_id) REFERENCES MealPeriods(id),
+     UNIQUE(food_id, meal_id)
+  );`; //helper table
+
   try {
     const [rFoods, fFoods] = await connection.execute(createFoodsTable);
     const [rUsers, fUsers] = await connection.execute(createUsersTable);
@@ -332,11 +352,13 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
       createAllergiesTable
     );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
+    const [rMealPeriods, fMealPeriods] = await connection.execute(createMealPeriodsTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
     await connection.execute(createDietsFoodsTable);
+    await connection.execute(createFoodsMealPeriodsTable);
 
     console.log("Tables created successfully");
   } catch (err) {
@@ -347,12 +369,70 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
 
   return connection;
 }
+//here we have some helper functions for filling tables
+async function InsertNameIntoFoods(food_name) {
+  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?) ON DUPLICATE KEY UPDATE id=id', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
+  
+  const [r] = await db.execute('SELECT id FROM Foods WHERE name = (?)', [food_name]);
+  return r[0].id
+}
+
+/*async function InsertNameIntoMealPeriods(mealPeriod_name) {
+  const [result] = await db.execute('INSERT INTO MealPeriods (name) VALUES (?)', [mealPeriod_name]) 
+  return result.insertId; //возможно сюда надо будет вставить обрпботку ошибок типа что если не вставилось в таблицу
+}*/
+
+async function InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id) {
+  const [result] = await db.execute('INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_food_id, inserted_meal_id]);
+}
+
+async function InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_allergie_id) {
+  const [result] = await db.execute('INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_allergie_id, inserted_food_id]);
+}
+
+async function InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id) {
+  const [result] = await db.execute('INSERT INTO Diets_Foods (diet_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_diet_id, inserted_food_id]);
+} 
+
+//findAMealPeriod
+async function findAMealPeriod(mealPeriods_name){ //returns an ID of the meal period it found or null
+  const [meals] = await db.execute("SELECT id FROM MealPeriods WHERE name = (?)", [mealPeriods_name]);
+  if (meals.length > 0){
+    const FoundMealPeriodID = meals[0].id;
+    return FoundMealPeriodID;
+  }
+  else {
+    return null;
+  }
+}
+
+async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it found or null
+  const [allergies] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [allergie_name]);
+  if (allergies.length > 0){
+    const FoundAllergieID = allergies[0].id;
+    return FoundAllergieID;
+  }
+  else {
+    return null;
+  }
+}
+//может их совместить?
+async function findADiet(diet_name){ //returns an ID of the Allergie it found or null
+  const [diets] = await db.execute("SELECT id FROM Diets WHERE name = (?)", [diet_name]);
+  if (diets.length > 0){
+    const FoundDietID = diets[0].id;
+    return FoundDietID;
+  }
+  else {
+    return null;
+  }
+}
 
 async function readData() {
   //probably where the web-scraping stuff goes
   //add some dummy data for now
 
-  var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
+  //var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
   var allergyIn = `INSERT INTO Allergies (name) VALUES 
   ('Contains alcohol'), 
   ('Contains Gluten'), 
@@ -367,12 +447,77 @@ async function readData() {
   ('Contains shellfish')
   ;`;
   var dietIn = `INSERT INTO Diets (name) VALUES 
-    ('Vegetarianegan'),
     ('Vegetarian'),
     ('Low Carbon Footprint'),
     ('High Carbon Footprint'),
     ('Halal menu option')
 ;`;
+var MealPeriodIn = `INSERT INTO MealPeriods (name) VALUES 
+    ('Breakfast'),
+    ('Lunch'),
+    ('Dinner')
+;`;
+
+//Now here will go the code for reading some data from the csv file and putting it into the Foods table:
+fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, data) => 
+{
+  if (err) {
+    console.error("error while reading the file", err)
+    return;
+  }
+  csv.parseString(data, {headers: true}) //starting to parse
+    .on("data", async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
+      //важно понимать, что row - это аргумент вот этой далее представленной async функции и он 
+      //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
+      //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
+      const food_name = row.dish_name;
+      if (food_name.startsWith("w/")){
+        return;
+      }
+      console.log("Food name", food_name);
+      //const mealPeriod_name = row.meal_period;
+      const inserted_food_id = await InsertNameIntoFoods(food_name);
+      //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
+      //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
+      //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
+        for (const header_csv of Object.keys(row))
+        {
+          if (header_csv === "meal_period") 
+          {
+            const mealPeriod = row[header_csv];
+            const MealPeriod_id = await findAMealPeriod(mealPeriod);
+            if (MealPeriod_id) {
+              console.log(inserted_food_id, MealPeriod_id);
+              await InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
+            }
+          }
+          if (header_csv.startsWith("Tag"))
+          {
+            const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
+            //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+            const Allergie_id = await findAnAllergie(tag);
+            const Diet_id = await findADiet(tag);
+            if (Allergie_id) {
+              //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+              await InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
+            }
+            if (Diet_id) {
+              await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+            }
+          }
+        }
+    })
+    .on("end", () => {
+      console.log("done parsing and filling tables")
+    })
+}
+
+
+
+)
+
+
+
   /*
   var foodIn =
     "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
@@ -424,9 +569,10 @@ ON Foods.id = t.food_id
 SET likes=cnt;`;
 
   try {
-    const [rFoods, fFoods] = await db.execute(foodIn);
+    //const [rFoods, fFoods] = await db.execute(foodIn);
     await db.execute(allergyIn);
     await db.execute(dietIn);
+    await db.execute(MealPeriodIn);
     await db.execute(usersIn);
     await db.execute(foodsUsersIn);
     await db.execute(allergiesUsersIn);
