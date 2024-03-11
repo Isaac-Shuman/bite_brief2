@@ -367,7 +367,7 @@ async function InsertNameIntoFoods(food_name) {
     return result.insertId;
   }
   else {
-    return null;
+    return existing_food[0].id;
   }
 }
 
@@ -471,9 +471,8 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
       //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
       //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
-      if (inserted_food_id)
-      {
-        for (const header_csv of Object.keys(row)){
+        for (const header_csv of Object.keys(row))
+        {
           if (header_csv === "meal_period") 
           {
             const mealPeriod = row[header_csv];
@@ -497,7 +496,6 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
             }
           }
         }
-      }
     })
     .on("end", () => {
       console.log("done parsing and filling tables")
