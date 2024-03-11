@@ -223,9 +223,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "Mashamellow",
+    password: "mY7733203***",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -236,11 +236,13 @@ async function initialize() {
   await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Foods;");
+  await connection.execute("DROP TABLE IF EXISTS Foods_MealPeriods;");
 
   await connection.execute("DROP TABLE IF EXISTS Foods;"); //delete it if it already exists, for now
   await connection.execute("DROP TABLE IF EXISTS Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies;");
   await connection.execute("DROP TABLE IF EXISTS Diets;");
+  await connection.execute("DROP TABLE IF EXISTS MealPeriods;"); //MealPeriod
 
   var createFoodsTable = `
   CREATE TABLE Foods (
@@ -271,9 +273,9 @@ async function initialize() {
   );`; //creating a Diets table
 
   var createMealPeriodsTable = `
-  CREATE TABLE MealPeriod (
+  CREATE TABLE MealPeriods (
     id BIGINT PRIMARY KEY AUTO_INCREMENT, 
-    name VARCHAR(50) NOT NULL UNIQUE,
+    name VARCHAR(50) NOT NULL UNIQUE
     );`; //creating Meal Period table
 
   ///////Helper tables
@@ -328,7 +330,7 @@ var createFoodsMealPeriodsTable = `
      food_id BIGINT,
      meal_id BIGINT,
      FOREIGN KEY (food_id) REFERENCES Foods(id),
-     FOREIGN KEY (meal_id) REFERENCES MealPeriod(id),
+     FOREIGN KEY (meal_id) REFERENCES MealPeriods(id),
      UNIQUE(food_id, meal_id)
   );`; //helper table
 
@@ -339,7 +341,7 @@ var createFoodsMealPeriodsTable = `
       createAllergiesTable
     );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
-    const [rMealPeriod, fMealPeriod] = await connection.execute(createMealPeriodsTable);
+    const [rMealPeriods, fMealPeriods] = await connection.execute(createMealPeriodsTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable);
     await connection.execute(createDietsUsersTable);
@@ -377,6 +379,18 @@ async function InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_alle
 
 async function InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id) {
   const [result] = await db.execute('INSERT INTO Diets_Foods (inserted_diet_id, food_id) VALUES (?, ?)', [inserted_diet_id, inserted_food_id]);
+} 
+
+//findAMealPeriod
+async function findAMealPeriod(mealPeriods_name){ //returns an ID of the Allergie it found or null
+  const [meals] = await db.execute("SELECT id FROM MealPeriods WHERE name = (?)", [mealPeriods_name]);
+  if (meals.length > 0){
+    const FoundMealPeriodID = meals[0].id;
+    return FoundMealPeriodID;
+  }
+  else {
+    return null;
+  }
 }
 
 async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it found or null
@@ -390,7 +404,7 @@ async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it
   }
 }
 //может их совместить?
-async function findADiet(allergie_name){ //returns an ID of the Allergie it found or null
+async function findADiet(diet_name){ //returns an ID of the Allergie it found or null
   const [diets] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [diet_name]);
   if (diets.length > 0){
     const FoundDietID = diets[0].id;
@@ -425,6 +439,11 @@ async function readData() {
     ('High Carbon Footprint'),
     ('Halal menu option')
 ;`;
+var MealPeriodIn = `INSERT INTO MealPeriods (name) VALUES 
+    ('Breakfast'),
+    ('Lunch'),
+    ('Dinner')
+;`;
 
 //Now here will go the code for reading some data from the csv file and putting it into the Foods table:
 fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, data) => 
@@ -439,25 +458,32 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
       //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
       const food_name = row.dish_name;
-      const mealPeriod_name = row.meal_period;
+      //const mealPeriod_name = row.meal_period;
       const inserted_food_id = InsertNameIntoFoods(food_name);
-      const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
+      //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
       //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
-      InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
+      //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
       for (const header_csv of Object.keys(row)){
+        if (header_csv === "meal_period") 
+        {
+          const mealPeriod = row[header_csv];
+          const MealPeriod_id = findAMealPeriod(mealPeriod);
+          if (MealPeriod_id) {
+            InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
+          }
+        }
         if (header_csv.startsWith("Tag"))
         {
           const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
           //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
-          const inserted_allergie_id = findAnAllergie(tag);
-          const inserted_diet_id = findADiet(tag);
-          if (inserted_allergie_id) {
+          const Allergie_id = findAnAllergie(tag);
+          const Diet_id = findADiet(tag);
+          if (Allergie_id) {
             //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-            InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_allergie_id);
+            InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
           }
-          if (inserted_diet_id) {
-            //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-            InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id);
+          if (Diet_id) {
+            InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
           }
         }
       }
@@ -524,9 +550,10 @@ ON Foods.id = t.food_id
 SET likes=cnt;`;
 
   try {
-    const [rFoods, fFoods] = await db.execute(foodIn);
+    //const [rFoods, fFoods] = await db.execute(foodIn);
     await db.execute(allergyIn);
     await db.execute(dietIn);
+    await db.execute(MealPeriodIn);
     await db.execute(usersIn);
     await db.execute(foodsUsersIn);
     await db.execute(allergiesUsersIn);
