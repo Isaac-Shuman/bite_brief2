@@ -129,7 +129,7 @@ async function main() {
       // console.error(err);
       res.json(err.code); //for example, ER_DUP_ENTRY
     }
-    console.log(JSON.stringify(response));
+    // console.log(JSON.stringify(response));
     res.json(response);
   });
 
@@ -233,9 +233,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "Mashamellow",
-    password: "mY7733203***",
-    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "root",
+    password: "12345678",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -577,8 +577,8 @@ SET likes=cnt;`;
     await db.execute(foodsUsersIn);
     await db.execute(allergiesUsersIn);
     await db.execute(dietsUsersIn);
-    await db.execute(allergiesFoodsIn);
-    await db.execute(dietsFoodsIn);
+    // await db.execute(allergiesFoodsIn);
+    // await db.execute(dietsFoodsIn);
 
     await db.execute(updateLikes);
   } catch (err) {
@@ -601,16 +601,24 @@ async function email(){
     const [rUsers, fUsers] = await db.execute(getUsers);
     for(var i=0; i<rUsers.length; i++){
       //probably somehow join with food availability later
-      var sql = `SELECT name FROM Foods 
-      JOIN Foods_Users on Foods_Users.food_id = Foods.id
-      WHERE Foods_Users.user_id = ${rUsers[i].id};`
+      var sql = `SELECT MealPeriods.name AS meal, Foods.name FROM Foods 
+      JOIN Foods_Users ON Foods_Users.food_id = Foods.id
+      JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
+      JOIN MealPeriods ON MealPeriods.id = Foods_MealPeriods.meal_id
+      WHERE Foods_Users.user_id = ${rUsers[i].id} ORDER BY Foods_MealPeriods.meal_id ASC
+      ;`
       // console.log(rUsers[i]);
       const [rFoods, fFoods] = await db.execute(sql);
       // var msg = JSON.stringify(rFoods);
-      msg = `Hello ${rUsers[i].username},\nYour favorite foods are:\n`;
+      msg = `Hello ${rUsers[i].username},\nYour favorite foods available are:\n`;
+      msg = msg + "Meal".padEnd(15, ' ') + "Food\n";
+      msg = msg + "".padEnd(40, '=') + "\n";
       for(var j=0; j<rFoods.length; j++){
-        msg = msg + rFoods[j].name + `\n`;
+        // console.log(rFoods[j])
+        msg = msg + rFoods[j].meal.padEnd(15, ' ') + rFoods[j].name + `\n`;
       }
+
+      console.log(msg);
 
       var mailOptions = {
         from: 'bitebriefnoreply@gmail.com',
