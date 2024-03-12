@@ -23,6 +23,8 @@ async function meh() {
   db = await initialize();
   await readData();
 
+  setInterval(()=>{getAllergiesIndex()}, 1000);
+
   app.get("/api/data", async (req, res) => {
     //I hope that async doesn't break something later...
     rows = await randQuerry("e");
@@ -301,12 +303,11 @@ async function initialize() {
      UNIQUE(allergy_id, user_id)
   );`; //helper table
 
-  var createAllergySeverityTable = `
-  CREATE TABLE IF NOT EXISTS Allergies_Severity (
-     allergy_id BIGINT,
-     allergy_severity INT,
-     FOREIGN KEY (allergy_id) REFERENCES Allergies(id)
-  );`; 
+  // var createAllergySeverityTable = `
+  // CREATE TABLE IF NOT EXISTS Allergies_Severity (
+  //    allergy_name BIGINT,
+  //    allergy_severity_index INT
+  // );`; 
 
   var createDietsUsersTable = `
   CREATE TABLE IF NOT EXISTS Diets_Users (
@@ -370,22 +371,24 @@ var createFoodsMealPeriodsTable = `
   return connection;
 }
 
-async function fillAllergiesSeverityTable(){
+async function getAllergiesIndex(){
   console.log("went into filling allergy data");
-  const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
-  if (allergies.length > 0)
-  {
-    for (const allergy of allergies)
-    {
-      await db.execute("INSERT INTO Allergies_Severity (allergy_id, allergy_severity) VALUES (?, ?)", [allergy.allergy_id, allergy.allergy_severity]);
-      console.log("filling one allergy", allergy);
-    }
-  console.log("done filling allery info");
-  }
-  else
-  {
-    console.error("nothing in allergy");
-  }
+  const [allergies] = await db.execute("SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id");
+  // const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
+  // console.log("allergies: ", allergies);
+  // if (allergies.length > 0)
+  // {
+  //   for (const allergy of allergies)
+  //   {
+  //     await db.execute("INSERT INTO Allergies_Severity (allergy_id, allergy_severity) VALUES (?, ?)", [allergy.allergy_id, allergy.allergy_severity]);
+  //     console.log("filling one allergy", allergy);
+  //   }
+  // }
+  // else
+  // {
+  //   console.error("nothing in allergy");
+  // }
+  // console.log("done filling allery info");
 }
 
 //here we have some helper functions for filling tables
@@ -530,7 +533,7 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
       console.log("done parsing and filling tables")
     })
 
-    await fillAllergiesSeverityTable();
+    //await fillAllergiesSeverityTable();
 
 
 }
