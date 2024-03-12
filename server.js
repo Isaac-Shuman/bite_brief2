@@ -5,8 +5,10 @@
 const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
+const email_rate = 10000; //every 10 s, low for testing
 const csv = require("fast-csv") //to parse the csv 
 const fs = require("fs") //to be able to gain acsess to the csv file
+
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -18,15 +20,17 @@ var curUserID = "dog";
 
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
-meh();
+var nodemailer = require('nodemailer');
+main();
 //async keyword lets you use 'await'
-async function meh() {
+async function main() {
   //because await can't be used in top-level, so let's make a function...
 
   //"wait" for these commands to return instead of executing synchronously
   //wow that was an awfully long time spent debugging and googling
   db = await initialize();
   await readData();
+  setInterval(()=>{email()}, email_rate); //email all users
 
   app.get("/api/data", async (req, res) => {
     //I hope that async doesn't break something later...
@@ -120,19 +124,25 @@ async function meh() {
     // res.json(data);
     console.log("refreshing trending list");
 
+    var updateLikes = `UPDATE Foods RIGHT JOIN (
+      SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
+      ON Foods.id = t.food_id
+      SET likes=cnt;`; // to update like count for foods
+
     var sql = `SELECT name, likes
     FROM Foods
     ORDER BY likes DESC;`;
 
     var response = "";
     try {
+      await db.execute(updateLikes);
       const [rFoods, fFoods] = await db.execute(sql);
       response = rFoods;
     } catch (err) {
       // console.error(err);
       res.json(err.code); //for example, ER_DUP_ENTRY
     }
-    console.log(JSON.stringify(response));
+    // console.log(JSON.stringify(response));
     res.json(response);
   });
 
@@ -288,8 +298,9 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Users ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
-   email VARCHAR(255) NOT NULL UNIQUE
+   email VARCHAR(255) NOT NULL
   );`; //creating a Users table
+  //email should also be UNIQUE, but removed to test email notifs
 
   var createAllergiesTable = `
   CREATE TABLE IF NOT EXISTS Allergies ( 
@@ -552,12 +563,12 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
 */
 
   var usersIn = `INSERT INTO Users (username, email) VALUES
-    ('blen', 'blen@gmail.com'),
-    ('Mashamellow', 'mellow@gmail.com'),
-    ('Koopa', 'isaacishuman@yahoo.com'),
-    ('zeeehan', 'zen@gmail.com'),
-    ('0xyw','erin@gmail.com'),
-    ('Kyuki','kelvin@gmail.com')
+    ('blen', 'bitebriefnoreply@gmail.com'),
+    ('Mashamellow', 'bitebriefnoreply@gmail.com'),
+    ('Koopa', 'bitebriefnoreply@gmail.com'),
+    ('zeeehan', 'bitebriefnoreply@gmail.com'),
+    ('0xyw','bitebriefnoreply@gmail.com'),
+    ('Kyuki','bitebriefnoreply@gmail.com')
   ;`;
 
   var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
@@ -598,13 +609,69 @@ SET likes=cnt;`;
     await db.execute(foodsUsersIn);
     await db.execute(allergiesUsersIn);
     await db.execute(dietsUsersIn);
-    await db.execute(allergiesFoodsIn);
-    await db.execute(dietsFoodsIn);
+    // await db.execute(allergiesFoodsIn);
+    // await db.execute(dietsFoodsIn);
 
     await db.execute(updateLikes);
   } catch (err) {
     console.log(err);
   }
+}
+
+// https://www.w3schools.com/nodejs/nodejs_email.asp
+// gmail password for this account is: "bitebriefCS35L"
+async function email(){
+  var transporter = await nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: 'bitebriefnoreply@gmail.com',
+      pass: 'xjpp oelj zrxb hwxx'
+    }
+  });
+  var getUsers = `SELECT id, username, email FROM Users`;
+  try{
+    const [rUsers, fUsers] = await db.execute(getUsers);
+    for(var i=0; i<rUsers.length; i++){
+      //probably somehow join with food availability later
+      var sql = `SELECT MealPeriods.name AS meal, Foods.name FROM Foods 
+      JOIN Foods_Users ON Foods_Users.food_id = Foods.id
+      JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
+      JOIN MealPeriods ON MealPeriods.id = Foods_MealPeriods.meal_id
+      WHERE Foods_Users.user_id = ${rUsers[i].id} ORDER BY Foods_MealPeriods.meal_id ASC
+      ;`
+      // console.log(rUsers[i]);
+      const [rFoods, fFoods] = await db.execute(sql);
+      // var msg = JSON.stringify(rFoods);
+      msg = `Hello ${rUsers[i].username},\nYour favorite foods available are:\n`;
+      msg = msg + "Meal".padEnd(15, ' ') + "Food\n";
+      msg = msg + "".padEnd(40, '=') + "\n";
+      for(var j=0; j<rFoods.length; j++){
+        // console.log(rFoods[j])
+        msg = msg + rFoods[j].meal.padEnd(15, ' ') + rFoods[j].name + `\n`;
+      }
+
+      console.log(msg);
+
+      var mailOptions = {
+        from: 'bitebriefnoreply@gmail.com',
+        to: `${rUsers[i].email}`,
+        subject: `Sending your fav foods, ${rUsers[i].username}`,
+        text: `${msg}`
+      }
+
+      transporter.sendMail(mailOptions, function(error, info){
+        if (error) {
+          console.log(error);
+        } else {
+          console.log('Email sent: ' + info.response);
+        }
+      });
+
+    }
+
+  } catch (err) {
+    console.log(err);
+ }
 }
 
 async function randQuerry(arg) {
