@@ -232,7 +232,8 @@ async function initialize() {
 
   //I labeled the helper tables in alphabetical order, btw
   await connection.execute("DROP TABLE IF EXISTS Foods_Users;");
-  await connection.execute("DROP TABLE IF EXISTS Allergies_Users;");
+  await connection.execute("DROP TABLE IF EXISTS Allergies_Users;"); 
+  await connection.execute("DROP TABLE IF EXISTS Allergies_Severity;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Foods;");
@@ -243,6 +244,8 @@ async function initialize() {
   await connection.execute("DROP TABLE IF EXISTS Allergies;");
   await connection.execute("DROP TABLE IF EXISTS Diets;");
   await connection.execute("DROP TABLE IF EXISTS MealPeriods;"); //MealPeriod
+
+
 
   var createFoodsTable = `
   CREATE TABLE Foods (
@@ -292,11 +295,18 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Allergies_Users (
      allergy_id BIGINT,
      user_id BIGINT,
-     status VARCHAR(255) NOT NULL UNIQUE,
+     allergy_severity INT,
      FOREIGN KEY (allergy_id) REFERENCES Allergies(id),
      FOREIGN KEY (user_id) REFERENCES Users(id),
      UNIQUE(allergy_id, user_id)
   );`; //helper table
+
+  var createAllergySeverityTable = `
+  CREATE TABLE IF NOT EXISTS Allergies_Severity (
+     allergy_id BIGINT,
+     allergy_severity INT,
+     FOREIGN KEY (allergy_id) REFERENCES Allergies(id)
+  );`; 
 
   var createDietsUsersTable = `
   CREATE TABLE IF NOT EXISTS Diets_Users (
@@ -343,7 +353,8 @@ var createFoodsMealPeriodsTable = `
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
     const [rMealPeriods, fMealPeriods] = await connection.execute(createMealPeriodsTable);
     await connection.execute(createFoodsUsersTable);
-    await connection.execute(createAllergiesUsersTable);
+    await connection.execute(createAllergiesUsersTable); 
+    await connection.execute(createAllergySeverityTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
     await connection.execute(createDietsFoodsTable);
@@ -358,6 +369,25 @@ var createFoodsMealPeriodsTable = `
 
   return connection;
 }
+
+async function fillAllergiesSeverityTable(){
+  console.log("went into filling allergy data");
+  const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
+  if (allergies.length > 0)
+  {
+    for (const allergy of allergies)
+    {
+      await db.execute("INSERT INTO Allergies_Severity (allergy_id, allergy_severity) VALUES (?, ?)", [allergy.allergy_id, allergy.allergy_severity]);
+      console.log("filling one allergy", allergy);
+    }
+  console.log("done filling allery info");
+  }
+  else
+  {
+    console.error("nothing in allergy");
+  }
+}
+
 //here we have some helper functions for filling tables
 async function InsertNameIntoFoods(food_name) {
   const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?) ON DUPLICATE KEY UPDATE id=id', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
@@ -499,6 +529,10 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
     .on("end", () => {
       console.log("done parsing and filling tables")
     })
+
+    await fillAllergiesSeverityTable();
+
+
 }
 
 
@@ -535,8 +569,8 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
     (4, 2), (4, 5), (4, 6),
     (5,1), (5,2), (5,3), (5,4), (5,5), (5,6)
   ;`;
-  var allergiesUsersIn = `INSERT INTO Allergies_Users (allergy_id, user_id, status) VALUES 
-    (1, 4, 'not too bad'), (1, 5, 'very serious'), (2, 1, 'life-threatening')
+  var allergiesUsersIn = `INSERT INTO Allergies_Users (allergy_id, user_id, allergy_severity) VALUES 
+    (1, 4, 1), (1, 5, 1), (2, 1, 10)
   ;`;
   var dietsUsersIn = `INSERT INTO Diets_Users (diet_id, user_id) VALUES 
   (3, 4), (1, 3)
