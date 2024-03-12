@@ -11,8 +11,13 @@ const fs = require("fs") //to be able to gain acsess to the csv file
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json()); //necessary for it to process post request which contain data
+var cookieParser = require("cookie-parser");
+app.use(cookieParser());
+
+var curUserID = "dog";
 
 const mysql = require("mysql2/promise");
+const { type } = require("@testing-library/user-event/dist/type");
 meh();
 //async keyword lets you use 'await'
 async function meh() {
@@ -46,9 +51,17 @@ async function meh() {
     }
   });
 
+  app.get("/api/user/uid", async (req, res) => {
+    const data = {userID: req.cookies.curUserId}
+    res.json(data);
+  });
+
   //add searching result(fav dish) to database
-  app.post("/api/addToFavorites", async (req, res) => {
-    const { userID, foodID } = req.body; // Extract userId and foodId from the request body
+  app.post("/api/user/addToFavorites", async (req, res) => {
+    const { formerly_userID, foodID } = req.body; // Extract userId and foodId from the request body
+
+    var userID = req.cookies.curUserId;
+    console.log("userID in add to favorites", userID);
 
     if (!userID || !foodID) {
       return res.status(400).json({ message: "Missing user ID or food ID" });
@@ -64,6 +77,7 @@ async function meh() {
     }
   });
 
+<<<<<<< HEAD
   app.get("/api/recommendedDishes", async (req, res) => {
     const { userID } = req.query; // Extracting userID from query parameters
 
@@ -93,6 +107,9 @@ async function meh() {
   });
 
   app.post("/api/favdishes", async (req, res) => {
+=======
+  app.post("/api/user/favdishes", async (req, res) => {
+>>>>>>> almostPersistLogon
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
     // const meal = req.body.meal;
@@ -138,15 +155,18 @@ async function meh() {
     res.json(data);
   });
 
-  app.post("/api/myFavDishes", async (req, res) => {
-    const userID = req.body.id;
+  app.post("/api/user/myFavDishes", async (req, res) => {
+    const formerly_userID = req.body.id;
+    var userID = JSON.parse(req.cookies.curUserId);
+
     var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
   JOIN Foods_Users ON Foods_Users.food_id = Foods.id
   JOIN Users ON Foods_Users.user_id = Users.id
   WHERE Users.id = ${userID};`;
 
-    console.log(userID);
+    console.log("userID when requesting favdishes: %s", userID);
+    console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -159,9 +179,13 @@ async function meh() {
     res.json(response);
   });
 
-  app.delete("/api/myFavDishes", async (req, res) => {
+  app.delete("/api/user/myFavDishes", async (req, res) => {
     const foodID = req.body.Fid;
     const userID = req.body.Uid;
+
+    console.log("cookie in delete is storing %s", req.cookies);
+
+
     var sql1 = `DELETE FROM Foods_Users
     WHERE user_id = ${userID} AND food_id = ${foodID};`;
     var sql2 = `UPDATE Foods SET likes = likes - 1
@@ -180,17 +204,20 @@ async function meh() {
     return;
   });
 
-  app.post('/api/signup', async (req, res) => {
+  app.post('/api/user', async (req, res) => {
     const {data} = req.body
 
     if (!data) {
       return res.status(400).json({ error: 'No data passed' })
     }
-    console.log(data.name);
-    console.log(data.email);
+    console.log("name received by api/signup: %s", data.name);
+    console.log("email received by api/signup %s", data.email);
     // data.name, data.email, data.picture for Google user profile data
 
-    const searchQuery = `SELECT id
+
+    //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
+    //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
+    const searchQuery = `SELECT id 
     FROM Users
     WHERE email = '${data.email}';`
     // search if user email is in database
@@ -201,15 +228,24 @@ async function meh() {
 
     try {
       const [user,fields] = await db.execute(searchQuery)
-      console.log(JSON.stringify(user))
 
       if (user.length==0) { //email DNE
         await db.execute(updateQuery)
       }
+      const [u,f] = await db.execute(searchQuery)
+      // console.log(typeof(u))
+      // console.log(u)
+      var cuid = Number(u[0]['id'])
+      res.cookie("curUserId", cuid);
+      console.log("curUserID dredged from database in api/signup %s", cuid);
+      
     }
     catch (error) {
+      console.log(error.code)
       res.status(400).json(error)
     }
+
+    res.send("success")
   })  
 
   app.listen(port, () => {
@@ -223,9 +259,15 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
+<<<<<<< HEAD
     user: "Mashamellow",
     password: "mY7733203***",
     database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+=======
+    user: "root",
+    password: "Fizzy19123",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+>>>>>>> almostPersistLogon
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
