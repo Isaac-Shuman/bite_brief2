@@ -77,7 +77,6 @@ async function meh() {
     }
   });
 
-<<<<<<< HEAD
   app.get("/api/recommendedDishes", async (req, res) => {
     const { userID } = req.query; // Extracting userID from query parameters
 
@@ -107,9 +106,6 @@ async function meh() {
   });
 
   app.post("/api/favdishes", async (req, res) => {
-=======
-  app.post("/api/user/favdishes", async (req, res) => {
->>>>>>> almostPersistLogon
     //send back:
     //[meal, urlToNutritionPage, whether or not the user liked it]
     // const meal = req.body.meal;
@@ -259,15 +255,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-<<<<<<< HEAD
-    user: "Mashamellow",
-    password: "mY7733203***",
-    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
-=======
     user: "root",
     password: "Fizzy19123",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
->>>>>>> almostPersistLogon
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);

@@ -18,18 +18,8 @@ export default function SignUp({loggedIn, setLoggedIn}) {
       .catch((error) => {
         console.log(error)
       })
-<<<<<<< HEAD
-
-
-    Cookies.set("email", user.email, {
-      expires: 7,
-    });
-  }
-
-=======
     
   }
->>>>>>> almostPersistLogon
 
   return (
     <div>
