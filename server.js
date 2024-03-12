@@ -21,7 +21,7 @@ var curUserID = "dog";
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
 var nodemailer = require('nodemailer');
-main();
+let db = main();
 //async keyword lets you use 'await'
 async function main() {
   //because await can't be used in top-level, so let's make a function...
@@ -30,6 +30,8 @@ async function main() {
   //wow that was an awfully long time spent debugging and googling
   db = await initialize();
   await readData();
+  return db
+}
   setInterval(()=>{email()}, email_rate); //email all users
 
   app.get("/api/data", async (req, res) => {
@@ -257,7 +259,7 @@ async function main() {
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
-}
+
 
 //////helper functions:
 

@@ -29,7 +29,7 @@ const Trending = () => {
     <div className="trending-container">
       <h1 className='trending'>WHAT'S TRENDING</h1>
       <div className="popular-items">
-        {popularItems.map((item, index) => (
+        {popularItems.slice(0, 10).map((item, index) => (
           <div className="item" key={index}>
             <span className="item-name">{item.name}</span>
             <span className="item-likes">

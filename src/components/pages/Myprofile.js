@@ -54,7 +54,7 @@ function DishSearchRes({searchPerformed, matchMeals, userID, addToFavorites})
     {searchPerformed && matchMeals.length === 0 ? (
       <p>No dishes found...</p>
     ) : (
-      matchMeals.map((meal, index) => (
+      matchMeals.slice(0, 10).map((meal, index) => (
         <div key={index} className="search-result">
           <span>{meal.name}</span>
           <button onClick={() => addToFavorites(userID, meal.id)}>
@@ -109,7 +109,7 @@ function Useless({matchMeals})
 {
   return (
   <div className="popular-items">
-        {matchMeals.map((item, index) => (
+        {matchMeals.slice(0, 10).map((item, index) => (
           <div className="item" key={index}>
             <span className="item-name">{item.name}</span>
             <span className="item-likes">
@@ -138,7 +138,7 @@ function YourFavorites({favFoods, setReRender, reRender, setUserID, removeFood})
     }}
   />
   <h1> Your favorite foods</h1>
-  {favFoods.map((item, index) => (
+  {favFoods.slice(0, 10).map((item, index) => (
     <div className="item" key={index}>
       <span className="item-name">{item.name}</span>
       {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
