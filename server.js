@@ -177,10 +177,10 @@ async function meh() {
 
   app.delete("/api/user/myFavDishes", async (req, res) => {
     const foodID = req.body.Fid;
-    const userID = req.body.Uid;
+    const formerly_userID = req.body.Uid;
 
     console.log("cookie in delete is storing %s", req.cookies);
-
+    const userID = req.cookies.curUserId;
 
     var sql1 = `DELETE FROM Foods_Users
     WHERE user_id = ${userID} AND food_id = ${foodID};`;
