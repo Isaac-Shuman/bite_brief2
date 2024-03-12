@@ -12,10 +12,10 @@ import axios from "axios";
 
 export const SignInContext = createContext(false);
 
-function WrappedProfile()
+function WrappedProfile(loggedIn)
 {
   return (
-    <SignInContext.Provider value={true}>
+    <SignInContext.Provider value={loggedIn}>
       <Myprofile />
     </SignInContext.Provider>
   );
@@ -52,7 +52,12 @@ function App() {
         <Navbar />
         <Switch>
           <Route path='/' exact component={Home} />
-          <Route path='/myprofile' component={WrappedProfile} />
+ 
+          <Route path='/myprofile' exact render ={() =>
+            <SignInContext.Provider value={loggedIn}>
+              <Myprofile />
+            </SignInContext.Provider>
+            } />
           <Route path='/trending' component={Trending} />
           <Route path='/sign-up' exact render={() => 
             <SignUp loggedIn={loggedIn} setLoggedIn={setLoggedIn}/>

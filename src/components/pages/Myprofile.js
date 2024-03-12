@@ -162,6 +162,12 @@ export default function Myprofile() {
   const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
   const [searchPerformed, setSearchPerformed] = useState(false);
 
+    ////////////Beatrice:
+  //get this user's favorite foods from the server
+  const [userID, setUserID] = useState(0);
+  const [reRender, setReRender] = useState(true);
+  const [favFoods, setFavFoods] = useState([Array().fill(null)]);
+  
   const loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
@@ -169,7 +175,7 @@ export default function Myprofile() {
     const searchTerm = event.target.value;
     setText(searchTerm);
 
-    if (searchTerm.trim() === "" || userID === 0) {
+    if (searchTerm.trim() === "") { //|| userID === 0) {
       setMatchMeals([]);
       setSearchPerformed(false); // when a search has not been performed or is not valid
       return;
@@ -200,7 +206,7 @@ export default function Myprofile() {
   const addToFavorites = async (userID, foodID) => {
     try {
       // Logging to ensure IDs are correct before sending
-      console.log("Adding to favorites:", { userID, foodID });
+      //console.log("Adding to favorites:", { userID, foodID });
 
       // Using Axios to send a POST request
       const response = await axios.post("/api/user/addToFavorites", {
@@ -221,6 +227,7 @@ export default function Myprofile() {
         error.response ? error.response.data : error
       );
     }
+    setReRender(!reRender);
   };
 
   // Function to handle allergy selection
@@ -239,11 +246,7 @@ export default function Myprofile() {
     console.log("Selected health goal:", selectedGoal);
   };
 
-  ////////////Beatrice:
-  //get this user's favorite foods from the server
-  const [userID, setUserID] = useState(0);
-  const [reRender, setReRender] = useState(true);
-  const [favFoods, setFavFoods] = useState([Array().fill(null)]);
+
   useEffect(() => {
     //initially render all dishes(trending)
     axios({

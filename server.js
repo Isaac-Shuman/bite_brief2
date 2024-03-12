@@ -56,9 +56,10 @@ async function meh() {
 
   //add searching result(fav dish) to database
   app.post("/api/user/addToFavorites", async (req, res) => {
-    const { userID, foodID } = req.body; // Extract userId and foodId from the request body
+    const { formerly_userID, foodID } = req.body; // Extract userId and foodId from the request body
 
-    console.log("cookie in addToFavorites is storing %s", req.cookies);
+    var userID = req.cookies.curUserId;
+    console.log("userID in add to favorites", userID);
 
     if (!userID || !foodID) {
       return res.status(400).json({ message: "Missing user ID or food ID" });
@@ -121,7 +122,9 @@ async function meh() {
   });
 
   app.post("/api/user/myFavDishes", async (req, res) => {
-    const userID = req.body.id;
+    const formerly_userID = req.body.id;
+    var userID = JSON.parse(req.cookies.curUserId);
+
     var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
   JOIN Foods_Users ON Foods_Users.food_id = Foods.id
@@ -224,7 +227,7 @@ async function initialize() {
     host: "localhost",
     user: "root",
     password: "Fizzy19123",
-    database: "a_database", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
