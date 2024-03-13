@@ -298,7 +298,7 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Allergies_Users (
      allergy_id BIGINT,
      user_id BIGINT,
-     allergy_severity INT,
+     allergy_severity INT DEFAULT 0,
      FOREIGN KEY (allergy_id) REFERENCES Allergies(id),
      FOREIGN KEY (user_id) REFERENCES Users(id),
      UNIQUE(allergy_id, user_id)
