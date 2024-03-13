@@ -16,7 +16,7 @@ app.use(bodyParser.json()); //necessary for it to process post request which con
 var cookieParser = require("cookie-parser");
 app.use(cookieParser());
 
-var curUserID = "dog";
+//var curUserID = "dog";
 
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
@@ -68,8 +68,9 @@ async function main() {
   app.post("/api/user/addToFavorites", async (req, res) => {
     const { formerly_userID, foodID } = req.body; // Extract userId and foodId from the request body
 
-    var userID = req.cookies.curUserId;
-    console.log("userID in add to favorites", userID);
+
+    var userID = req.cookies["curUserId"];
+    //console.log("userID in add to favorites", userID);
 
     if (!userID || !foodID) {
       return res.status(400).json({ message: "Missing user ID or food ID" });
@@ -85,9 +86,9 @@ async function main() {
     }
   });
 
-  app.get("/api/recommendedDishes", async (req, res) => {
-    const { userID } = req.query; // Extracting userID from query parameters
-
+  app.get("/api/user/recommendedDishes", async (req, res) => {
+    //const { userID } = req.query; // Extracting userID from query parameters
+    var userID = req.cookies["curUserId"];
     if (!userID) {
       return res.status(400).json({ message: "Missing userID parameter" });
     }
@@ -166,8 +167,11 @@ async function main() {
   });
 
   app.post("/api/user/myFavDishes", async (req, res) => {
-    const formerly_userID = req.body.id;
-    var userID = JSON.parse(req.cookies.curUserId);
+    //const formerly_userID = req.body.id;
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
@@ -175,8 +179,8 @@ async function main() {
   JOIN Users ON Foods_Users.user_id = Users.id
   WHERE Users.id = ${userID};`;
 
-    console.log("userID when requesting favdishes: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+    //console.log("userID when requesting favdishes: %s", userID);
+    //console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -191,13 +195,17 @@ async function main() {
 
   app.post("/api/user/addAllergy", async (req, res) => {
     var allergyID = req.body.allergyID;
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `INSERT INTO Allergies_Users (allergy_id, user_id) VALUES
    (${allergyID}, ${userID}) ON DUPLICATE KEY UPDATE user_id = user_id;`;
 
-    console.log("userID when adding allergy: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+    // console.log("userID when adding allergy: %s", userID);
+    // console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -211,13 +219,16 @@ async function main() {
 
   app.post("/api/user/addDiet", async (req, res) => {
     var dietID = req.body.dietID;
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `INSERT INTO Diets_Users (diet_id, user_id) VALUES
    (${dietID}, ${userID}) ON DUPLICATE KEY UPDATE user_id = user_id;`;
 
-    console.log("userID when adding diet: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+    // console.log("userID when adding diet: %s", userID);
+    // console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -229,7 +240,10 @@ async function main() {
  }});
 
   app.post("/api/user/myDiets", async (req, res) => {
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `SELECT Diets.name, Diets.id
   FROM Diets
@@ -237,8 +251,8 @@ async function main() {
   WHERE Diets_Users.user_id = ${userID}
   ORDER BY Diets.id ASC;`;
 
-    console.log("userID when requesting my diets: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+   // console.log("userID when requesting my diets: %s", userID);
+    //console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -252,7 +266,10 @@ async function main() {
   });
 
   app.post("/api/user/leftDiets", async (req, res) => {
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
   var sql = `SELECT Diets.name, Diets.id
   FROM Diets
@@ -269,8 +286,8 @@ async function main() {
   // ORDER BY Diets.id ASC;`;
 
 
-    console.log("userID when requesting left diets: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+    // console.log("userID when requesting left diets: %s", userID);
+    // console.log("cookie in post is storing %s", req.cookies);
 
     var response = "";
     try {
@@ -284,7 +301,10 @@ async function main() {
   });
 
   app.post("/api/user/myAllergies", async (req, res) => {
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `SELECT Allergies.name, Allergies.id
   FROM Allergies
@@ -306,7 +326,10 @@ async function main() {
   });
 
   app.post("/api/user/leftAllergies", async (req, res) => {
-    var userID = JSON.parse(req.cookies.curUserId);
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
 
     var sql = `SELECT Allergies.name, Allergies.id
@@ -337,7 +360,10 @@ async function main() {
     const formerly_userID = req.body.Uid;
 
     console.log("cookie in delete is storing %s", req.cookies);
-    const userID = req.cookies.curUserId;
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql1 = `DELETE FROM Foods_Users
     WHERE user_id = ${userID} AND food_id = ${foodID};`;
@@ -361,7 +387,10 @@ async function main() {
     const dietID = req.body.Did;
 
     console.log("cookie in delete is storing %s", req.cookies);
-    const userID = req.cookies.curUserId;
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `DELETE FROM Diets_Users
     WHERE user_id = ${userID} AND diet_id = ${dietID};`;
@@ -381,7 +410,10 @@ async function main() {
     const allergyID = req.body.Aid;
 
     console.log("cookie in delete is storing %s", req.cookies);
-    const userID = req.cookies.curUserId;
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
 
     var sql = `DELETE FROM Allergies_Users
     WHERE user_id = ${userID} AND allergy_id = ${allergyID};`;
@@ -452,9 +484,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "Mashamellow",
-    password: "mY7733203***",
-    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "root",
+    password: "Fizzy19123",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);

@@ -18,7 +18,7 @@ export default function RecommendedDishes() {
       // Check that userID is not the initial value
       const fetchDishes = async () => {
         try {
-          const response = await axios.get(`/api/recommendedDishes`, {
+          const response = await axios.get(`/api/user/recommendedDishes`, {
             params: { userID }, // Pass userID as query parameter
           });
           console.log(response);
