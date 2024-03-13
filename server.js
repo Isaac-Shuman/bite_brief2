@@ -34,7 +34,7 @@ async function main() {
 }
   // setInterval(()=>{email()}, email_rate); //email all users
 
-  setInterval(()=>{getAllergiesIndex()}, 30000); //in milliseconds
+  setInterval(()=>{getAllergiesIndex()}, 60000); //in milliseconds
 
   app.get("/api/data", async (req, res) => {
     //I hope that async doesn't break something later...
@@ -228,7 +228,7 @@ async function main() {
        res.status(500).json({ message: "Error adding diet" });
  }});
 
-  app.get("/api/user/myDiets", async (req, res) => {
+  app.post("/api/user/myDiets", async (req, res) => {
     var userID = JSON.parse(req.cookies.curUserId);
 
     var sql = `SELECT Diets.name, Diets.id
@@ -251,7 +251,7 @@ async function main() {
     res.json(response);
   });
 
-  app.get("/api/user/leftDiets", async (req, res) => {
+  app.post("/api/user/leftDiets", async (req, res) => {
     var userID = JSON.parse(req.cookies.curUserId);
 
   var sql = `SELECT Diets.name, Diets.id
@@ -283,7 +283,7 @@ async function main() {
     res.json(response);
   });
 
-  app.get("/api/user/myAllergies", async (req, res) => {
+  app.post("/api/user/myAllergies", async (req, res) => {
     var userID = JSON.parse(req.cookies.curUserId);
 
     var sql = `SELECT Allergies.name, Allergies.id
@@ -305,7 +305,7 @@ async function main() {
     res.json(response);
   });
 
-  app.get("/api/user/leftAllergies", async (req, res) => {
+  app.post("/api/user/leftAllergies", async (req, res) => {
     var userID = JSON.parse(req.cookies.curUserId);
 
 

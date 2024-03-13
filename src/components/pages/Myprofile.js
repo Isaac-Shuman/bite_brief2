@@ -303,7 +303,7 @@ export default function Myprofile() {
   useEffect(() => {
     //render all selected diets
     axios({
-      method: "get",
+      method: "post",
       url: "/api/user/myDiets",
       data: {
       },
@@ -319,7 +319,7 @@ export default function Myprofile() {
   useEffect(() => {
     //render all selected allergies
     axios({
-      method: "get",
+      method: "post",
       url: "/api/user/myAllergies",
       data: {
       },
@@ -335,7 +335,7 @@ export default function Myprofile() {
   useEffect(() => {
     //render all unselected allergies
     axios({
-      method: "get",
+      method: "post",
       url: "/api/user/leftAllergies",
       data: {
       },
@@ -351,7 +351,7 @@ export default function Myprofile() {
     useEffect(() => {
       //render all unselected diets
       axios({
-        method: "get",
+        method: "post",
         url: "/api/user/leftDiets",
         data: {
         },
