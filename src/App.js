@@ -11,6 +11,7 @@ import AboutUs from './components/pages/AboutUs';
 import { createContext, useEffect, useState} from 'react'
 import axios from "axios";
 import RecommendedDish from "./components/pages/RecommendedDish";
+import { ToastContainer } from 'react-toastify';
 
 
 export const SignInContext = createContext(false);
@@ -70,6 +71,7 @@ function App() {
           <Route path="/recommendeddish" component={RecommendedDish} />
         </Switch>
       </Router>
+      <ToastContainer />
     </>
   );
 }
