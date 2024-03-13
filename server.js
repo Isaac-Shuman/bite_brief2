@@ -261,7 +261,8 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Users ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
-   email VARCHAR(255) NOT NULL UNIQUE
+   email VARCHAR(255) NOT NULL UNIQUE,
+   fun_fact VARCHAR(255)
   );`; //creating a Users table
 
   var createAllergiesTable = `
