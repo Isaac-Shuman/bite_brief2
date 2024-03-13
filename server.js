@@ -493,6 +493,7 @@ async function main() {
       return;
     }
     */
+    res.send("useless value");
     return;
   });
 

@@ -184,8 +184,8 @@ function YourDiets({diets, removeDiet})
 
 function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex})
 {
-  console.log("allergyIndices are: ", allergyIndices)
-  console.log("allergyindices[index]: ", allergyIndices[0])
+  //console.log("allergyIndices are: ", allergyIndices)
+  //console.log("allergyindices[index]: ", allergyIndices[0])
   return (
   <div>
   <h1> Your current allergies</h1>
@@ -322,6 +322,7 @@ export default function Myprofile() {
       },
     })
       .then((response) => {
+        console.log("rerender allergies")
         setUserAllergies(response.data);
       })
       .catch((error) => {
@@ -380,7 +381,7 @@ export default function Myprofile() {
   }, [reRender]);
 
   useEffect(() => {
-    //render all fav dishes of this user
+
     axios({
       method: "post",
       url: "/api/user/userIndices",
@@ -389,7 +390,8 @@ export default function Myprofile() {
       }
     })
       .then((response) => {
-        setFavFoods(response.data);
+        //setUserIndices(response.data); BEatrice or masha
+        console.log("Beatrice or Masha setUserIndices after response is working")
       })
       .catch((error) => {
         console.error(error);
