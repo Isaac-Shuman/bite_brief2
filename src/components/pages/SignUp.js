@@ -5,29 +5,21 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Cookies from "js-cookie";
 
-export default function SignUp() {
-  const [user, setUser] = useState([])
+export default function SignUp({loggedIn, setLoggedIn}) {
 
   /*TODO: Update UI, Add cookies */
 
   const login = async (response) => {
-    setUser(await jwtDecode(response.credential))
-
     axios
-      .post('/api/signup', {
+      .post('/api/user', {
         data: await jwtDecode(response.credential),
       })
-      .then((response) => {})
+      .then((response) => {setLoggedIn(true)})
       .catch((error) => {
         console.log(error)
       })
-
-
-    Cookies.set("email", user.email, {
-      expires: 7,
-    });
+    
   }
-
 
   return (
     <div>
