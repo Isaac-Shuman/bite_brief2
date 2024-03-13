@@ -133,24 +133,6 @@ function SelectAllergy({allergies, addAllergy})
   );
 }
 
-function Useless({matchMeals})
-{
-  return (
-  <div className="popular-items">
-        {matchMeals.slice(0, 10).map((item, index) => (
-          <div className="item" key={index}>
-            <span className="item-name">{item.name}</span>
-            <span className="item-likes">
-              <i className="fas fa-heart"></i> {item.likes}
-            </span>
-            <button type="submit">
-              <i class="fa fa-search"></i>
-            </button>
-          </div>
-        ))}
-  </div>
-  );
-}
 
 function YourFavorites({favFoods, removeFood})
 {
@@ -217,6 +199,14 @@ function YourAllergies({allergies, removeAllergy})
         {" "}
         Remove{" "}
       </button>
+      <text> How would you rate the severity of this allergy? </text>
+      <select>
+        <option value={0}>Rate Severity 1-3</option>
+        <option value={1}>1-Barely notice it</option>
+        <option value={2}>2-Problematic</option>
+        <option value={3}>3-Anaphylactic shock</option>
+      {/* Add more allergy options */}
+      </select>
     </div>
   ))}
   </div>
