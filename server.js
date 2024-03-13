@@ -235,7 +235,7 @@ async function initialize() {
   //I labeled the helper tables in alphabetical order, btw
   await connection.execute("DROP TABLE IF EXISTS Foods_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Users;"); 
-  await connection.execute("DROP TABLE IF EXISTS Allergies_Severity;");
+  //await connection.execute("DROP TABLE IF EXISTS Allergies_Severity;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Foods;");
