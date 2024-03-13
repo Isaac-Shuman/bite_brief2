@@ -62,7 +62,7 @@ function App() {
               <Myprofile />
             </SignInContext.Provider>
             } />
-          <Route path='/trending' component={Trending} />
+          <Route path='/trending' component={Trending} loggedIn={loggedIn}/>
           <Route path='/sign-up' exact render={() => 
             <SignUp loggedIn={loggedIn} setLoggedIn={setLoggedIn}/>
           } />
