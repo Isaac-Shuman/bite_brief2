@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import './Trending.css';
 import axios from 'axios';
 
-const Trending = () => {
+const Trending = ({loggedIn}) => {
   const [popularItems, setPopularItems] = useState([
     { name: 'Item 1     ', likes: 10 },
     { name: 'Item 2     ', likes: 15 },
@@ -23,7 +23,7 @@ const Trending = () => {
       .catch(error => {
         console.error(error);
       });
-  }, []);
+  }, [loggedIn]);
 
   return (
     <div className="trending-container">
