@@ -23,29 +23,6 @@ function EnterDish({handleSearchChange}) {
   );
 }
 
-function SelectAllergies({handleAllergySelect})
-{
-  return (
-    <>
-    <div>
-    <h2>2. My Allergies</h2>
-    <select onChange={handleAllergySelect}>
-      <option value="">Select Allergy</option>
-      <option value="Peanuts">Peanuts</option>
-      <option value="Shellfish">Shellfish</option>
-      <option value="Gluten">Gluten</option>
-      <option value="Eggs">Eggs</option>
-      <option value="Diary">Diary</option>
-      {/* Add more allergy options */}
-    </select>
-    {/* Connect to backend database to fetch and save allergies */}
-  </div>
-  <br></br>
-  </>
-
-  );
-}
-
 function DishSearchRes({searchPerformed, matchMeals, userID, addToFavorites})
 {
   return (
@@ -67,12 +44,50 @@ function DishSearchRes({searchPerformed, matchMeals, userID, addToFavorites})
   );
 }
 
-function HealthGoal({handleGoalSelect})
+{/* <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
+<SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/> */}
+
+function SelectDiet({diets, addDiet})
+{
+  return (
+    <>
+    <div>
+    <h2>2. Add Diets</h2>
+    {/* <select onChange={addDiet}>
+      <option value="">Select Allergy</option>
+      <option value="Peanuts">Peanuts</option>
+      <option value="Shellfish">Shellfish</option>
+      <option value="Gluten">Gluten</option>
+      <option value="Eggs">Eggs</option>
+      <option value="Diary">Diary</option>
+    </select> */}
+      {diets.map((item, index) => (
+    <div className="item" key={index}>
+      <span className="item-name">{item.name}</span>
+
+      <button
+        onClick={() => {
+          addDiet(diets[index].id);
+        }}
+      >
+        {" "}
+        Add{" "}
+      </button>
+    </div>
+  ))}
+  </div>
+  <br></br>
+  </>
+
+  );
+}
+
+function SelectAllergy({allergies, addAllergy})
 {
   return (
   <div>
-        <h2>3. My Health Goal</h2>
-        <input
+        <h2>3. Add Allergies</h2>
+        {/* <input
           type="radio"
           id="goal1"
           name="healthGoal"
@@ -98,9 +113,22 @@ function HealthGoal({handleGoalSelect})
           onChange={handleGoalSelect}
         />
         <label htmlFor="goal3">Control Blood Sugar</label>
-        <br />
-        {/* Add more health goal options */}
-          {/* Connect to backend database to save selected health goal */}
+        <br /> */}
+        {allergies.map((item, index) => (
+    <div className="item" key={index}>
+      <span className="item-name">{item.name}</span>
+
+      <button
+        onClick={() => {
+          addAllergy(allergies[index].id);
+        }}
+      >
+        {" "}
+        Add{" "}
+      </button>
+    </div>
+  ))}
+      
   </div>
   );
 }
@@ -124,19 +152,10 @@ function Useless({matchMeals})
   );
 }
 
-function YourFavorites({favFoods, setReRender, reRender, setUserID, removeFood})
+function YourFavorites({favFoods, removeFood})
 {
   return (
   <div>
-  <input
-    type="text"
-    placeholder="For now, input a user id number (1~6)"
-    onChange={(event) => {
-      // console.log(JSON.stringify(event.target.value));
-      setUserID(Number(event.target.value));
-      setReRender(!reRender);
-    }}
-  />
   <h1> Your favorite foods</h1>
   {favFoods.slice(0, 10).map((item, index) => (
     <div className="item" key={index}>
@@ -157,16 +176,67 @@ function YourFavorites({favFoods, setReRender, reRender, setUserID, removeFood})
   );
 }
 
+function YourDiets({diets, removeDiet})
+{
+  return (
+  <div>
+  <h1> Your current diets</h1>
+  {diets.map((item, index) => (
+    <div className="item" key={index}>
+      <span className="item-name">{item.name}</span>
+
+      <button
+        onClick={() => {
+          removeDiet(diets[index].id);
+        }}
+      >
+        {" "}
+        Remove{" "}
+      </button>
+    </div>
+  ))}
+  </div>
+  );
+}
+
+
+function YourAllergies({allergies, removeAllergy})
+{
+  return (
+  <div>
+  <h1> Your current allergies</h1>
+  {allergies.map((item, index) => (
+    <div className="item" key={index}>
+      <span className="item-name">{item.name}</span>
+
+      <button
+        onClick={() => {
+          removeAllergy(allergies[index].id);
+        }}
+      >
+        {" "}
+        Remove{" "}
+      </button>
+    </div>
+  ))}
+  </div>
+  );
+}
+
 export default function Myprofile() {
   const [typedText, setText] = useState("");
   const [matchMeals, setMatchMeals] = useState([Array(9).fill(null)]);
   const [searchPerformed, setSearchPerformed] = useState(false);
+  const [leftAllergies, setLeftAllergies] = useState([Array().fill(null)]);
+  const [leftDiets, setLeftDiets] = useState([Array().fill(null)]);
 
     ////////////Beatrice:
   //get this user's favorite foods from the server
   const [userID, setUserID] = useState(0);
   const [reRender, setReRender] = useState(true);
   const [favFoods, setFavFoods] = useState([Array().fill(null)]);
+  const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
+  const [userDiets, setUserDiets] = useState([Array().fill(null)]);
   
   const loggedin = useContext(SignInContext);
 
@@ -230,39 +300,69 @@ export default function Myprofile() {
     setReRender(!reRender);
   };
 
-  // Function to handle allergy selection
-  const handleAllergySelect = (event) => {
-    // Get selected allergy value
-    const selectedAllergy = event.target.value;
-    // Connect to backend database to save selected allergy
-    console.log("Selected allergy:", selectedAllergy);
-  };
-
-  // Function to handle health goal selection
-  const handleGoalSelect = (event) => {
-    // Get selected goal value
-    const selectedGoal = event.target.value;
-    // Connect to backend database to save selected health goal
-    console.log("Selected health goal:", selectedGoal);
-  };
-
-
   useEffect(() => {
-    //initially render all dishes(trending)
+    //render all selected diets
     axios({
-      method: "post",
-      url: "/api/user/favdishes", //url: '/api/profile',
+      method: "get",
+      url: "/api/user/myDiets",
       data: {
-        // meal: typedText
       },
     })
       .then((response) => {
-        setMatchMeals(response.data);
+        setUserDiets(response.data);
       })
       .catch((error) => {
         console.error(error);
       });
   }, [reRender]);
+
+  useEffect(() => {
+    //render all selected allergies
+    axios({
+      method: "get",
+      url: "/api/user/myAllergies",
+      data: {
+      },
+    })
+      .then((response) => {
+        setUserAllergies(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [reRender]);
+
+  useEffect(() => {
+    //render all unselected allergies
+    axios({
+      method: "get",
+      url: "/api/user/leftAllergies",
+      data: {
+      },
+    })
+      .then((response) => {
+        setLeftAllergies(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    }, [reRender]);
+
+    useEffect(() => {
+      //render all unselected diets
+      axios({
+        method: "get",
+        url: "/api/user/leftDiets",
+        data: {
+        },
+      })
+        .then((response) => {
+          setLeftDiets(response.data);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+      }, [reRender]);
 
   useEffect(() => {
     //render all fav dishes of this user
@@ -279,11 +379,11 @@ export default function Myprofile() {
       .catch((error) => {
         console.error(error);
       });
+      
   }, [reRender]);
 
   //clicked the remove button on a food item
   const removeFood = (foodID) => {
-    // setReRender(!reRender);
     axios({
       method: "delete",
       url: "/api/user/myFavDishes",
@@ -299,18 +399,115 @@ export default function Myprofile() {
         console.error(error);
       });
 
-    setReRender(!reRender); //to redisplay updated dishes
+    reRenderPage(); //to redisplay updated dishes
   };
-  ////////////
+
+    //clicked the remove button on a diet item
+    const removeDiet = (dietID) => {
+      axios({
+        method: "delete",
+        url: "/api/user/myDiets",
+        data: {
+          Did: dietID,
+        },
+      })
+        .then((response) => {
+          console.log("deleted %d, code: %s", dietID, response);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+  
+      reRenderPage(); //to redisplay updated diets
+    };
+
+    //clicked the remove button on an allergy item
+    const removeAllergy = (allergyID) => {
+      axios({
+        method: "delete",
+        url: "/api/user/myAllergies",
+        data: {
+          Aid: allergyID,
+        },
+      })
+        .then((response) => {
+          console.log("deleted %d, code: %s", allergyID, response);
+        })
+        .catch((error) => {
+          console.error(error);
+        });
+  
+      reRenderPage(); //to redisplay updated diets
+    };
+
+    const addAllergy = async (allergyID) => {
+      try {
+        // Logging to ensure IDs are correct before sending
+        //console.log("Adding to favorites:", { userID, foodID });
+  
+        // Using Axios to send a POST request
+        const response = await axios.post("/api/user/addAllergy", {
+          allergyID
+        });
+  
+        // Check if the response was successful
+        if (response.status === 200) {
+          alert(response.data.message); // Or update UI to show success
+        } else {
+          console.error("Failed to add diet:", response.data.message);
+        }
+      } catch (error) {
+        // If there's an error with the request itself, it will be caught here
+        console.error(
+          "Error adding to diets:",
+          error.response ? error.response.data : error
+        );
+      }
+      reRenderPage();
+    };
+
+    const addDiet = async (dietID) => {
+      try {
+        // Logging to ensure IDs are correct before sending
+        //console.log("Adding to favorites:", { userID, foodID });
+  
+        // Using Axios to send a POST request
+        const response = await axios.post("/api/user/addDiet", {
+          dietID
+        });
+  
+        // Check if the response was successful
+        if (response.status === 200) {
+          alert(response.data.message); // Or update UI to show success
+        } else {
+          console.error("Failed to add diet:", response.data.message);
+        }
+      } catch (error) {
+        // If there's an error with the request itself, it will be caught here
+        console.error(
+          "Error adding to diets:",
+          error.response ? error.response.data : error
+        );
+      }
+      reRenderPage();
+    };
+
+  const reRenderPage = () => {
+    setReRender(!reRender);
+  };  
+
+////////////
   if (loggedin)
   {
   return (
     <div className="myprofile">
       <EnterDish handleSearchChange={handleSearchChange}/>
       <DishSearchRes searchPerformed={searchPerformed} matchMeals={matchMeals} userID={userID} addToFavorites ={addToFavorites}/>
-      <SelectAllergies handleAllergySelect={handleAllergySelect}/>
-      <HealthGoal handleGoalSelect={handleGoalSelect}/>
-      <YourFavorites favFoods={favFoods} setReRender={setReRender} reRender={reRender} setUserID={setUserID} removeFood={removeFood}/>
+      <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
+      <SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/>
+      <YourDiets diets={userDiets} removeDiet={removeDiet}/>
+      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy}/>
+      <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
     </div>
   );
   }
