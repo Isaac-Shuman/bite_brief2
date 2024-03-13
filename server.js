@@ -355,7 +355,7 @@ var createFoodsMealPeriodsTable = `
     const [rMealPeriods, fMealPeriods] = await connection.execute(createMealPeriodsTable);
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable); 
-    await connection.execute(createAllergySeverityTable);
+    //await connection.execute(createAllergySeverityTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
     await connection.execute(createDietsFoodsTable);
