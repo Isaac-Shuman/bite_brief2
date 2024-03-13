@@ -182,7 +182,7 @@ function YourDiets({diets, removeDiet})
 }
 
 
-function YourAllergies({allergies, removeAllergy})
+function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex})
 {
   return (
   <div>
@@ -199,12 +199,12 @@ function YourAllergies({allergies, removeAllergy})
         {" "}
         Remove{" "}
       </button>
-      <text> How would you rate the severity of this allergy? </text>
-      <select>
+      <p1> How would you rate the severity of this allergy? </p1>
+      <select onChange={(event) => {updateAllergyIndex(allergies[index].id, event.target.value)}} value={allergyIndices[index]}>
         <option value={0}>Rate Severity 1-3</option>
-        <option value={1}>1-Barely notice it</option>
-        <option value={2}>2-Problematic</option>
-        <option value={3}>3-Anaphylactic shock</option>
+        <option value={1}>1- Barely notice it</option>
+        <option value={2}>2- Problematic</option>
+        <option value={3}>3- Anaphylaxis</option>
       {/* Add more allergy options */}
       </select>
     </div>
@@ -227,7 +227,8 @@ export default function Myprofile() {
   const [favFoods, setFavFoods] = useState([Array().fill(null)]);
   const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
-  
+  const [userIndices, setUserIndices] = useState([Array().fill(0)]);
+
   const loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
@@ -486,6 +487,17 @@ export default function Myprofile() {
     setReRender(!reRender);
   };  
 
+  const updateAllergyIndex = async (allergyID, value) => {
+    
+    let nextUserIndices = userIndices.slice();
+    nextUserIndices[allergyID] = value;
+    setUserIndices(nextUserIndices);
+    console.log('event.target.value is: %s', value);
+    console.log('allergID is %i', allergyID);
+
+    
+  };
+
 ////////////
   if (loggedin)
   {
@@ -496,7 +508,7 @@ export default function Myprofile() {
       <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
       <SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/>
       <YourDiets diets={userDiets} removeDiet={removeDiet}/>
-      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy}/>
+      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
       <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
     </div>
   );
