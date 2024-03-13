@@ -133,24 +133,6 @@ function SelectAllergy({allergies, addAllergy})
   );
 }
 
-function Useless({matchMeals})
-{
-  return (
-  <div className="popular-items">
-        {matchMeals.slice(0, 10).map((item, index) => (
-          <div className="item" key={index}>
-            <span className="item-name">{item.name}</span>
-            <span className="item-likes">
-              <i className="fas fa-heart"></i> {item.likes}
-            </span>
-            <button type="submit">
-              <i class="fa fa-search"></i>
-            </button>
-          </div>
-        ))}
-  </div>
-  );
-}
 
 function YourFavorites({favFoods, removeFood})
 {
@@ -200,8 +182,10 @@ function YourDiets({diets, removeDiet})
 }
 
 
-function YourAllergies({allergies, removeAllergy})
+function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex})
 {
+  //console.log("allergyIndices are: ", allergyIndices)
+  //console.log("allergyindices[index]: ", allergyIndices[0])
   return (
   <div>
   <h1> Your current allergies</h1>
@@ -217,6 +201,18 @@ function YourAllergies({allergies, removeAllergy})
         {" "}
         Remove{" "}
       </button>
+      <p1> How would you rate the severity of this allergy? </p1>
+      <select onChange={(event) => {
+        updateAllergyIndex(allergies[index].id, event.target.value); 
+        console.log("allergyIndices[i] %i", allergyIndices[index])}
+    
+    } value={allergyIndices[allergies[index].id]}>
+        <option value={0}>Rate Severity 1-3</option>
+        <option value={1}>1- Barely notice it</option>
+        <option value={2}>2- Problematic</option>
+        <option value={3}>3- Anaphylaxis</option>
+      {/* Add more allergy options */}
+      </select>
     </div>
   ))}
   </div>
@@ -237,7 +233,8 @@ export default function Myprofile() {
   const [favFoods, setFavFoods] = useState([Array().fill(null)]);
   const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
-  
+  const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
+
   const loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
@@ -324,6 +321,7 @@ export default function Myprofile() {
       },
     })
       .then((response) => {
+        console.log("rerender allergies")
         setUserAllergies(response.data);
       })
       .catch((error) => {
@@ -380,6 +378,25 @@ export default function Myprofile() {
       });
       
   }, [reRender]);
+
+  useEffect(() => {
+
+    axios({
+      method: "post",
+      url: "/api/user/userIndices",
+      data: {
+        userIndices: userIndices
+      }
+    })
+      .then((response) => {
+        //setUserIndices(response.data); BEatrice or masha
+        console.log("Beatrice or Masha setUserIndices after response is working")
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+      
+  }, [reRender, userIndices]);
 
   //clicked the remove button on a food item
   const removeFood = (foodID) => {
@@ -495,6 +512,16 @@ export default function Myprofile() {
     setReRender(!reRender);
   };  
 
+  const updateAllergyIndex = async (allergyID, value) => {
+    let nextUserIndices = userIndices.slice();
+    nextUserIndices[allergyID] = value;
+    setUserIndices(nextUserIndices);
+    console.log('event.target.value is: %s', value);
+    console.log('allergID is %i', allergyID);
+
+    
+  };
+
 ////////////
   if (loggedin)
   {
@@ -505,7 +532,7 @@ export default function Myprofile() {
       <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
       <SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/>
       <YourDiets diets={userDiets} removeDiet={removeDiet}/>
-      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy}/>
+      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
       <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
     </div>
   );

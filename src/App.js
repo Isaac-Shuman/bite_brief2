@@ -15,23 +15,6 @@ import RecommendedDish from "./components/pages/RecommendedDish";
 
 export const SignInContext = createContext(false);
 
-
-function WrappedProfile(loggedIn)
-{
-  return (
-    <SignInContext.Provider value={loggedIn}>
-      <Myprofile />
-    </SignInContext.Provider>
-  );
-}
-
-function SignInWithState()
-{
-  
-  return (
-    <SignUp />
-  )
-}
 function App() {
   const [userID, setUserID] = useState(0);
   const [loggedIn, setLoggedIn] = useState(false)
@@ -67,7 +50,9 @@ function App() {
             <SignUp loggedIn={loggedIn} setLoggedIn={setLoggedIn}/>
           } />
           <Route path="/aboutus" component={AboutUs} />
-          <Route path="/recommendeddish" component={RecommendedDish} />
+          <Route path="/recommendeddish" exact render={() => 
+            <RecommendedDish loggedIn={loggedIn}/>
+          } />
         </Switch>
       </Router>
     </>

@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./RecommendedDish.css";
 
-export default function RecommendedDishes() {
+export default function RecommendedDishes({loggedIn}) {
   const [userID, setUserID] = useState("");
   const [mealPeriodID, setMealPeriodID] = useState("");
   const [recommendedDishes, setRecommendedDishes] = useState([]);
@@ -88,6 +88,7 @@ export default function RecommendedDishes() {
     }
   }, [userID]);
 
+  if (loggedIn) {
   return (
     <div className="recommended-dishes">
       <input
@@ -143,4 +144,10 @@ export default function RecommendedDishes() {
       </ul>
     </div>
   );
+  }
+  else {
+    return (
+      <h1> Please login </h1>
+    )
+  }
 }
