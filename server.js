@@ -274,8 +274,7 @@ async function initialize() {
   var createDietsTable = `
   CREATE TABLE IF NOT EXISTS Diets ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-   name VARCHAR(255) NOT NULL UNIQUE,
-   description TEXT
+   name VARCHAR(255) NOT NULL UNIQUE
   );`; //creating a Diets table
 
   var createMealPeriodsTable = `
