@@ -184,6 +184,8 @@ function YourDiets({diets, removeDiet})
 
 function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex})
 {
+  console.log("allergyIndices are: ", allergyIndices)
+  console.log("allergyindices[index]: ", allergyIndices[0])
   return (
   <div>
   <h1> Your current allergies</h1>
@@ -200,7 +202,11 @@ function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyI
         Remove{" "}
       </button>
       <p1> How would you rate the severity of this allergy? </p1>
-      <select onChange={(event) => {updateAllergyIndex(allergies[index].id, event.target.value)}} value={allergyIndices[index]}>
+      <select onChange={(event) => {
+        updateAllergyIndex(allergies[index].id, event.target.value); 
+        console.log("allergyIndices[i] %i", allergyIndices[index])}
+    
+    } value={allergyIndices[allergies[index].id]}>
         <option value={0}>Rate Severity 1-3</option>
         <option value={1}>1- Barely notice it</option>
         <option value={2}>2- Problematic</option>
@@ -227,7 +233,7 @@ export default function Myprofile() {
   const [favFoods, setFavFoods] = useState([Array().fill(null)]);
   const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
-  const [userIndices, setUserIndices] = useState([Array().fill(0)]);
+  const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
 
   const loggedin = useContext(SignInContext);
 
@@ -373,6 +379,24 @@ export default function Myprofile() {
       
   }, [reRender]);
 
+  useEffect(() => {
+    //render all fav dishes of this user
+    axios({
+      method: "post",
+      url: "/api/user/userIndices",
+      data: {
+        userIndices: userIndices
+      }
+    })
+      .then((response) => {
+        setFavFoods(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+      
+  }, [reRender, userIndices]);
+
   //clicked the remove button on a food item
   const removeFood = (foodID) => {
     axios({
@@ -488,7 +512,6 @@ export default function Myprofile() {
   };  
 
   const updateAllergyIndex = async (allergyID, value) => {
-    
     let nextUserIndices = userIndices.slice();
     nextUserIndices[allergyID] = value;
     setUserIndices(nextUserIndices);

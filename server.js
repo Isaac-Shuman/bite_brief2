@@ -473,6 +473,29 @@ async function main() {
     res.send("success")
   })  
 
+  app.post('/api/user/userIndices', async (req, res) => {
+    const userIndices = req.body.userIndices;
+    console.log("userIndices where index = corresponding Allergy ID", userIndices);
+    console.log("cookie in delete is storing %s", req.cookies);
+
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
+    
+    /*
+    var sq1 = ????
+    try {
+      await db.execute(sql);
+    } catch (err) { 
+      // console.error(err);
+      res.json(err.code); //for example, ER_DUP_ENTRY
+      return;
+    }
+    */
+    return;
+  });
+
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
   });
