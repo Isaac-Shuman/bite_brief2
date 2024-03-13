@@ -10,6 +10,15 @@ export default function RecommendedDishes() {
   const [isLoading, setIsLoading] = useState(false);
   const [favoriteDishes, setFavoriteDishes] = useState([]);
 
+  //function to shuffle the array and set display limit
+  const shuffleAndLimitDishes = (dishes, limit) => {
+    for (let i = dishes.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [dishes[i], dishes[j]] = [dishes[j], dishes[i]]; // swap
+    }
+    return dishes.slice(0, limit);
+  };
+
   const fetchRecommendedDishes = async () => {
     if (!userID || !mealPeriodID) {
       alert("Both User ID and Meal Period ID are required.");
@@ -21,7 +30,8 @@ export default function RecommendedDishes() {
       const response = await axios.get(
         `/api/recommendeddish?userID=${userID}&mealPeriodID=${mealPeriodID}`
       );
-      setRecommendedDishes(response.data);
+      const limitedDishes = shuffleAndLimitDishes(response.data, 20);
+      setRecommendedDishes(limitedDishes);
       // console.log("Recommended Dishes:", response.data);
     } catch (error) {
       console.error("Error fetching recommended dishes:", error);
