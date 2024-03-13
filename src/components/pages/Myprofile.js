@@ -44,8 +44,7 @@ export default function Myprofile() {
 
   const addToFavorites = async (userID, foodID) => {
     try {
-      // Logging to ensure IDs are correct before sending
-      console.log("Adding to favorites:", { userID, foodID });
+      // console.log("Adding to favorites:", { userID, foodID });
 
       // Using Axios to send a POST request
       const response = await axios.post("/api/addToFavorites", {
@@ -55,12 +54,11 @@ export default function Myprofile() {
 
       // Check if the response was successful
       if (response.status === 200) {
-        alert(response.data.message); // Or update UI to show success
+        alert(response.data.message);
       } else {
         console.error("Failed to add to favorites:", response.data.message);
       }
     } catch (error) {
-      // If there's an error with the request itself, it will be caught here
       console.error(
         "Error adding to favorites:",
         error.response ? error.response.data : error

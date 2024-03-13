@@ -1,54 +1,136 @@
-// import React from "react";
-// // import RecommendedDish from "./RecommendedDish";
-
-// const RecommendedDish = () => {
-//   return <h1>About Us</h1>;
-// };
-
-// export default RecommendedDish;
 import React, { useState, useEffect } from "react";
 import axios from "axios";
+import "./RecommendedDish.css";
 
 export default function RecommendedDishes() {
-  const [dishes, setDishes] = useState([]);
-  const [userID, setUserID] = useState(0); // Same as in your Myprofile component
+  const [userID, setUserID] = useState("");
+  const [mealPeriodID, setMealPeriodID] = useState("");
+  const [recommendedDishes, setRecommendedDishes] = useState([]);
+  const [FavFoods, setFavFoods] = useState([Array().fill(null)]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [favoriteDishes, setFavoriteDishes] = useState([]);
+
+  const fetchRecommendedDishes = async () => {
+    if (!userID || !mealPeriodID) {
+      alert("Both User ID and Meal Period ID are required.");
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      const response = await axios.get(
+        `/api/recommendeddish?userID=${userID}&mealPeriodID=${mealPeriodID}`
+      );
+      setRecommendedDishes(response.data);
+      // console.log("Recommended Dishes:", response.data);
+    } catch (error) {
+      console.error("Error fetching recommended dishes:", error);
+      alert("Failed to fetch recommended dishes.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchFavorites = async () => {
+    axios({
+      method: "post",
+      url: "/api/myFavDishes",
+      data: {
+        id: userID,
+      },
+    })
+      .then((response) => {
+        setFavFoods(response.data);
+        // console.log(FavFoods);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  };
+
+  const addToFavorites = async (foodID) => {
+    if (!userID) {
+      alert("User ID is required.");
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/addToFavorites", {
+        userID,
+        foodID,
+      });
+      if (response.status === 200) {
+        alert("Dish added to favorites successfully!");
+        // console.log(response);
+        fetchFavorites(); // Re-fetch favorites to update the list
+      } else {
+        alert("Failed to add dish to favorites.");
+      }
+    } catch (error) {
+      console.error("Error adding to favorites:", error);
+      alert("Failed to add dish to favorites.");
+    }
+  };
 
   useEffect(() => {
-    if (userID !== 0) {
-      // Check that userID is not the initial value
-      const fetchDishes = async () => {
-        try {
-          const response = await axios.get(`/api/recommendedDishes`, {
-            params: { userID }, // Pass userID as query parameter
-          });
-          console.log(response);
-          setDishes(response.data); // Set fetched dishes to state
-        } catch (error) {
-          console.error("Error fetching recommended dishes:", error);
-        }
-      };
-
-      fetchDishes();
+    if (userID) {
+      fetchFavorites(); // Fetch favorites when the userID is set or changed
     }
-  }, [userID]); // Rerun effect if userID changes
+  }, [userID]);
 
   return (
-    <div>
+    <div className="recommended-dishes">
       <input
         type="text"
-        placeholder="Input user ID"
-        value={userID === 0 ? "" : userID} // If userID is 0 (initial state), show empty string
-        onChange={(event) => setUserID(Number(event.target.value))}
+        className="input-box"
+        placeholder="Input User ID"
+        value={userID}
+        onChange={(e) => setUserID(e.target.value)}
       />
-      <h1>Recommended Dishes</h1>
-      <div className="dishes-list">
-        {dishes.map((dish, index) => (
-          <div key={index} className="dish">
-            <span>{dish.name}</span>
-            {/* Add more dish details here */}
-          </div>
+      <input
+        type="text"
+        className="input-box"
+        placeholder="Input Meal Period ID"
+        value={mealPeriodID}
+        onChange={(e) => setMealPeriodID(e.target.value)}
+      />
+      <button
+        className="button"
+        onClick={fetchRecommendedDishes}
+        disabled={isLoading}
+      >
+        Fetch Dishes
+      </button>
+      {isLoading ? (
+        <p>Loading...</p>
+      ) : (
+        <ul>
+          {recommendedDishes.slice(0, 20).map((dish) => {
+            // console.log(dish);
+
+            // return the JSX for each dish
+            return (
+              <li key={dish.id}>
+                <span className="dish-name">{dish.name}</span> -{" "}
+                <button
+                  onClick={() => {
+                    // console.log(`Adding dish to favorites: ${dish.id}`);
+                    addToFavorites(dish.id);
+                  }}
+                >
+                  Add to Favorites
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+      {/* <h2>Your Favorite Foods</h2> */}
+      <ul>
+        {favoriteDishes.map((dish) => (
+          <li key={dish.id}>{dish.name}</li>
         ))}
-      </div>
+      </ul>
     </div>
   );
 }
