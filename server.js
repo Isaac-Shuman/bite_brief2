@@ -440,10 +440,16 @@ async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it
   }
 }
 //может их совместить?
-async function findADiet(diet_name){ //returns an ID of the Allergie it found or null
+async function findADiet(diet_name){ 
+  if (diet_name === "Vegetarianegan")
+  {
+    //console.log("Detected a vegan diet: ", diet_name);
+    diet_name = "Vegan";
+  }
   const [diets] = await db.execute("SELECT id FROM Diets WHERE name = (?)", [diet_name]);
   if (diets.length > 0){
     const FoundDietID = diets[0].id;
+    //console.log("Dish name: ", diets[0]);
     return FoundDietID;
   }
   else {
@@ -471,6 +477,7 @@ async function readData() {
   ;`;
   var dietIn = `INSERT INTO Diets (name) VALUES 
     ('Vegetarian'),
+    ('Vegan'),
     ('Low Carbon Footprint'),
     ('High Carbon Footprint'),
     ('Halal menu option')
@@ -579,16 +586,16 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
   var dietsUsersIn = `INSERT INTO Diets_Users (diet_id, user_id) VALUES 
   (3, 4), (1, 3)
 ;`;
-  var allergiesFoodsIn = `INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES
-  (1, 1), (1, 2), (1, 4),
-  (2, 1), (2,2),
-  (3, 2)
-;`;
-  var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
-  (1, 3), (1,5),
-  (2, 1), (2, 2), (2, 4),
-  (3, 3), (3, 5)
-;`;
+  // var allergiesFoodsIn = `INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES
+  // (1, 1), (1, 2), (1, 4),
+  // (2, 1), (2,2),
+  // (3, 2)
+;
+//   var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
+//   (1, 3), (1,5),
+//   (2, 1), (2, 2), (2, 4),
+//   (3, 3), (3, 5)
+// ;`;
 
   var updateLikes = `UPDATE Foods RIGHT JOIN (
 SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
@@ -604,8 +611,8 @@ SET likes=cnt;`;
     await db.execute(foodsUsersIn);
     await db.execute(allergiesUsersIn);
     await db.execute(dietsUsersIn);
-    await db.execute(allergiesFoodsIn);
-    await db.execute(dietsFoodsIn);
+    //await db.execute(allergiesFoodsIn);
+    //await db.execute(dietsFoodsIn);
 
     await db.execute(updateLikes);
   } catch (err) {
