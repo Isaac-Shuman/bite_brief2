@@ -77,7 +77,7 @@ async function main() {
     }
 
     try {
-      var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; // This SQL prevents duplicates
+      var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; //prevent duplicates
       await db.execute(sql, [userID, foodID]);
       res.json({ message: "Favorite added successfully." });
     } catch (err) {
@@ -86,30 +86,97 @@ async function main() {
     }
   });
 
-  app.get("/api/user/recommendedDishes", async (req, res) => {
-    //const { userID } = req.query; // Extracting userID from query parameters
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
+  app.get("/api/recommendeddish", async (req, res) => {
+    const { userID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
+
+    if (!userID || !mealPeriodID) {
+      return res
+        .status(400)
+        .json({ message: "Missing userID or mealPeriodID parameter" });
     }
 
-    // SQL query to find foods that the user is not allergic to
-    const sql = `
-        SELECT Foods.name 
-        FROM Foods 
-        WHERE Foods.id NOT IN (
-            SELECT food_id 
-            FROM Allergies_Foods 
-            JOIN Allergies_Users ON Allergies_Foods.allergy_id = Allergies_Users.allergy_id 
-            WHERE Allergies_Users.user_id = ?
-        );
+    // First we check if the user has diet preferences
+    let hasDietPreferencesQuery = `
+        SELECT COUNT(*) AS dietCount 
+        FROM Diets_Users 
+        WHERE user_id = ?;
     `;
+    let hasDietPreferences = false;
+    try {
+      const [dietPreferenceResults] = await db.execute(
+        hasDietPreferencesQuery,
+        [userID]
+      );
+      hasDietPreferences = dietPreferenceResults[0].dietCount > 0;
+    } catch (error) {
+      console.error("Error checking diet preferences:", error);
+      return res
+        .status(500)
+        .json({ message: "Error checking diet preferences" });
+    }
+
+    // Additional: Check if the user has allergies
+    let hasAllergiesQuery = `
+        SELECT COUNT(*) AS allergyCount 
+        FROM Allergies_Users 
+        WHERE user_id = ?;
+    `;
+    let hasAllergies = false;
+    try {
+      const [allergyResults] = await db.execute(hasAllergiesQuery, [userID]);
+      hasAllergies = allergyResults[0].allergyCount > 0;
+    } catch (error) {
+      console.error("Error checking allergies:", error);
+      return res.status(500).json({ message: "Error checking allergies" });
+    }
+
+    //set a condition that check if the user has diet
+    let sql = "";
+    if (hasDietPreferences) {
+      // User has diet preferences
+      sql = `
+            SELECT Foods.name,Foods.id
+            FROM Foods 
+            JOIN Diets_Foods ON Diets_Foods.food_id = Foods.id 
+            JOIN Diets ON Diets.id = Diets_Foods.diet_id 
+            JOIN Diets_Users ON Diets_Users.diet_id = Diets.id 
+            JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
+            WHERE Diets_Users.user_id = ?
+            AND Foods_MealPeriods.meal_id = ?;
+        `;
+    } else if (hasAllergies) {
+      // User does not have diet preferences but has allergies
+      sql = `
+            SELECT Foods.name,Foods.id
+            FROM Foods 
+            JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
+            WHERE Foods.id NOT IN (
+                SELECT food_id 
+                FROM Allergies_Foods 
+                JOIN Allergies_Users ON Allergies_Foods.allergy_id = Allergies_Users.allergy_id 
+                WHERE Allergies_Users.user_id = ?)
+            AND Foods_MealPeriods.meal_id = ?;
+        `;
+    } else {
+      // User has neither diet preferences nor allergies
+      sql = `
+            SELECT Foods.name,Foods.id
+            FROM Foods 
+            JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
+            WHERE Foods_MealPeriods.meal_id = ?;
+        `;
+    }
 
     try {
-      const [foods] = await db.execute(sql, [userID]); // Pass userID to the query
-      res.json(foods); // Send the retrieved foods back to the client
-    } catch (err) {
-      console.error(err);
+      const [foods] = await db.execute(
+        sql,
+        hasDietPreferences || hasAllergies
+          ? [userID, mealPeriodID]
+          : [mealPeriodID]
+      );
+      res.json(foods); // Send the retrieved data back to the client
+    } catch (error) {
+      console.error("Error retrieving recommended dishes:", error);
       res.status(500).json({ message: "Error retrieving recommended dishes" });
     }
   });
@@ -433,7 +500,7 @@ async function main() {
     const {data} = req.body
 
     if (!data) {
-      return res.status(400).json({ error: 'No data passed' })
+      return res.status(400).json({ error: "No data passed" });
     }
     console.log("name received by api/signup: %s", data.name);
     console.log("email received by api/signup %s", data.email);
@@ -444,18 +511,19 @@ async function main() {
     //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
     const searchQuery = `SELECT id 
     FROM Users
-    WHERE email = '${data.email}';`
+    WHERE email = '${data.email}';`;
     // search if user email is in database
 
     const updateQuery = `INSERT INTO Users (username, email) VALUES
-    ('${data.name}', '${data.email}');`
+    ('${data.name}', '${data.email}');`;
     // updates database with user data
 
     try {
       const [user,fields] = await db.execute(searchQuery)
 
-      if (user.length==0) { //email DNE
-        await db.execute(updateQuery)
+      if (user.length == 0) {
+        //email DNE
+        await db.execute(updateQuery);
       }
       const [u,f] = await db.execute(searchQuery)
       // console.log(typeof(u))
@@ -597,7 +665,7 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   UNIQUE(diet_id, food_id)
 );`; //helper table
 
-var createFoodsMealPeriodsTable = `
+  var createFoodsMealPeriodsTable = `
   CREATE TABLE IF NOT EXISTS Foods_MealPeriods (
      food_id BIGINT,
      meal_id BIGINT,
@@ -613,7 +681,9 @@ var createFoodsMealPeriodsTable = `
       createAllergiesTable
     );
     const [rDiets, fDiets] = await connection.execute(createDietsTable);
-    const [rMealPeriods, fMealPeriods] = await connection.execute(createMealPeriodsTable);
+    const [rMealPeriods, fMealPeriods] = await connection.execute(
+      createMealPeriodsTable
+    );
     await connection.execute(createFoodsUsersTable);
     await connection.execute(createAllergiesUsersTable); 
     //await connection.execute(createAllergySeverityTable);
@@ -654,10 +724,15 @@ async function getAllergiesIndex(){
 
 //here we have some helper functions for filling tables
 async function InsertNameIntoFoods(food_name) {
-  const [result] = await db.execute('INSERT INTO Foods (name) VALUES (?) ON DUPLICATE KEY UPDATE id=id', [food_name]) //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
-  
-  const [r] = await db.execute('SELECT id FROM Foods WHERE name = (?)', [food_name]);
-  return r[0].id
+  const [result] = await db.execute(
+    "INSERT INTO Foods (name) VALUES (?) ON DUPLICATE KEY UPDATE id=id",
+    [food_name]
+  ); //тут надо походу возвращать айдишник, чтобы потом добавлять в хелпер таблицу
+
+  const [r] = await db.execute("SELECT id FROM Foods WHERE name = (?)", [
+    food_name,
+  ]);
+  return r[0].id;
 }
 
 /*async function InsertNameIntoMealPeriods(mealPeriod_name) {
@@ -665,37 +740,61 @@ async function InsertNameIntoFoods(food_name) {
   return result.insertId; //возможно сюда надо будет вставить обрпботку ошибок типа что если не вставилось в таблицу
 }*/
 
-async function InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id) {
-  const [result] = await db.execute('INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_food_id, inserted_meal_id]);
+async function InsertIdsIntoFoods_MealPeriodsTable(
+  inserted_food_id,
+  inserted_meal_id
+) {
+  const [result] = await db.execute(
+    "INSERT INTO Foods_MealPeriods (food_id, meal_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id",
+    [inserted_food_id, inserted_meal_id]
+  );
 }
 
-async function InsertIdsIntoAllergies_FoodsTable(inserted_food_id, inserted_allergie_id) {
-  const [result] = await db.execute('INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_allergie_id, inserted_food_id]);
+async function InsertIdsIntoAllergies_FoodsTable(
+  inserted_food_id,
+  inserted_allergie_id
+) {
+  const [result] = await db.execute(
+    "INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id",
+    [inserted_allergie_id, inserted_food_id]
+  );
 }
 
-async function InsertIdsIntoDiets_FoodsTable(inserted_food_id, inserted_diet_id) {
-  const [result] = await db.execute('INSERT INTO Diets_Foods (diet_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id', [inserted_diet_id, inserted_food_id]);
-} 
+async function InsertIdsIntoDiets_FoodsTable(
+  inserted_food_id,
+  inserted_diet_id
+) {
+  const [result] = await db.execute(
+    "INSERT INTO Diets_Foods (diet_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE food_id=food_id",
+    [inserted_diet_id, inserted_food_id]
+  );
+}
 
 //findAMealPeriod
-async function findAMealPeriod(mealPeriods_name){ //returns an ID of the meal period it found or null
-  const [meals] = await db.execute("SELECT id FROM MealPeriods WHERE name = (?)", [mealPeriods_name]);
-  if (meals.length > 0){
+async function findAMealPeriod(mealPeriods_name) {
+  //returns an ID of the meal period it found or null
+  const [meals] = await db.execute(
+    "SELECT id FROM MealPeriods WHERE name = (?)",
+    [mealPeriods_name]
+  );
+  if (meals.length > 0) {
     const FoundMealPeriodID = meals[0].id;
     return FoundMealPeriodID;
-  }
-  else {
+  } else {
     return null;
   }
 }
 
-async function findAnAllergie(allergie_name){ //returns an ID of the Allergie it found or null
-  const [allergies] = await db.execute("SELECT id FROM Allergies WHERE name = (?)", [allergie_name]);
-  if (allergies.length > 0){
+async function findAnAllergie(allergie_name) {
+  //returns an ID of the Allergie it found or null
+  const [allergies] = await db.execute(
+    "SELECT id FROM Allergies WHERE name = (?)",
+    [allergie_name]
+  );
+  if (allergies.length > 0) {
     const FoundAllergieID = allergies[0].id;
     return FoundAllergieID;
-  }
-  else {
+  } else {
     return null;
   }
 }
@@ -711,8 +810,7 @@ async function findADiet(diet_name){
     const FoundDietID = diets[0].id;
     //console.log("Dish name: ", diets[0]);
     return FoundDietID;
-  }
-  else {
+  } else {
     return null;
   }
 }
@@ -742,45 +840,67 @@ async function readData() {
     ('High Carbon Footprint'),
     ('Halal menu option')
 ;`;
-var MealPeriodIn = `INSERT INTO MealPeriods (name) VALUES 
+  var MealPeriodIn = `INSERT INTO MealPeriods (name) VALUES 
     ('Breakfast'),
     ('Lunch'),
     ('Dinner')
 ;`;
 
-//Now here will go the code for reading some data from the csv file and putting it into the Foods table:
-fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, data) => 
-{
-  if (err) {
-    console.error("error while reading the file", err)
-    return;
-  }
-  csv.parseString(data, {headers: true}) //starting to parse
-    .on("data", async (row) => { //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
-      //важно понимать, что row - это аргумент вот этой далее представленной async функции и он 
-      //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные 
-      //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
-      const food_name = row.dish_name;
-      if (food_name.startsWith("w/")){
+  //Now here will go the code for reading some data from the csv file and putting it into the Foods table:
+  fs.readFile(
+    "bitebrief_webscraping_v1.xlsx - Sheet1.csv",
+    "utf8",
+    async (err, data) => {
+      if (err) {
+        console.error("error while reading the file", err);
         return;
       }
-      console.log("Food name", food_name);
-      //const mealPeriod_name = row.meal_period;
-      const inserted_food_id = await InsertNameIntoFoods(food_name);
-      //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
-      //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево 
-      //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
-        for (const header_csv of Object.keys(row))
-        {
-          if (header_csv === "meal_period") 
-          {
-            const mealPeriod = row[header_csv];
-            const MealPeriod_id = await findAMealPeriod(mealPeriod);
-            if (MealPeriod_id) {
-              console.log(inserted_food_id, MealPeriod_id);
-              await InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, MealPeriod_id);
-            }
+      csv
+        .parseString(data, { headers: true }) //starting to parse
+        .on("data", async (row) => {
+          //this is used to listen if anyone wants to know till we r done w parsin one line and can do stuff w it
+          //важно понимать, что row - это аргумент вот этой далее представленной async функции и он
+          //выглядит внутри как словарь, где ключи это названия заголовков а содержимое это данные
+          //асссоциируемые с каждым заголовком в конкретной строчке которая только что обработалась
+          const food_name = row.dish_name;
+          if (food_name.startsWith("w/")) {
+            return;
           }
+          console.log("Food name", food_name);
+          //const mealPeriod_name = row.meal_period;
+          const inserted_food_id = await InsertNameIntoFoods(food_name);
+          //const inserted_meal_id = InsertNameIntoMealPeriods(mealPeriod_name); //эту переменную потом используем для вставки в хелпер таблицу
+          //сюда пойдет код с заполнением хелпер таблиц: парсим сквозь теги и тд Я устаааааала пхпх но мне клево
+          //InsertIdsIntoFoods_MealPeriodsTable(inserted_food_id, inserted_meal_id); //it doesn't return anything just fills the helper table
+          for (const header_csv of Object.keys(row)) {
+            if (header_csv === "meal_period") {
+              const mealPeriod = row[header_csv];
+              const MealPeriod_id = await findAMealPeriod(mealPeriod);
+              if (MealPeriod_id) {
+                console.log(inserted_food_id, MealPeriod_id);
+                await InsertIdsIntoFoods_MealPeriodsTable(
+                  inserted_food_id,
+                  MealPeriod_id
+                );
+              }
+            }
+            if (header_csv.startsWith("Tag")) {
+              const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
+              //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+              const Allergie_id = await findAnAllergie(tag);
+              const Diet_id = await findADiet(tag);
+              if (Allergie_id) {
+                //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+                await InsertIdsIntoAllergies_FoodsTable(
+                  inserted_food_id,
+                  Allergie_id
+                );
+              }
+              if (Diet_id) {
+                await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+              }
+            }
+          
           if (header_csv.startsWith("Tag"))
           {
             const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
@@ -795,8 +915,7 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
               await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
             }
           }
-        }
-    })
+        }})
     .on("end", () => {
       console.log("done parsing and filling tables")
     })
@@ -804,11 +923,8 @@ fs.readFile("bitebrief_webscraping_v1.xlsx - Sheet1.csv", "utf8", async (err, da
     //await fillAllergiesSeverityTable();
 
 
-}
 
 
-
-)
 
 
 
@@ -878,7 +994,7 @@ SET likes=cnt;`;
   } catch (err) {
     console.log(err);
   }
-}
+}) }
 
 // https://www.w3schools.com/nodejs/nodejs_email.asp
 // gmail password for this account is: "bitebriefCS35L"

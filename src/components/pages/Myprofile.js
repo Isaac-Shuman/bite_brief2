@@ -286,12 +286,11 @@ export default function Myprofile() {
 
       // Check if the response was successful
       if (response.status === 200) {
-        alert(response.data.message); // Or update UI to show success
+        alert(response.data.message);
       } else {
         console.error("Failed to add to favorites:", response.data.message);
       }
     } catch (error) {
-      // If there's an error with the request itself, it will be caught here
       console.error(
         "Error adding to favorites:",
         error.response ? error.response.data : error
