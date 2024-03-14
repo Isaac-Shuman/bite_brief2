@@ -103,6 +103,24 @@ app.get("/api/user/random", async (req, res) => {
   }
 });
 
+app.post("/api/user/addFact", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  const fact = req.body.fact;
+
+  var sql = `UPDATE Users SET fun_fact = '${fact}' WHERE id = ${userID};`;
+
+  console.log("userID when adding fun fact %s", userID);
+  console.log("cookie in post is storing %s", req.cookies);
+
+  try {
+    await db.execute(sql);
+    res.json({ message: "Fact added successfully." });
+  } catch (err) {
+    console.error("Error adding fact:", err);
+    res.status(500).json({ message: "Error adding fact" });
+  }
+});
+
 app.get("/api/recommendeddish", async (req, res) => {
   const { formerlyUserID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
   var userID = req.cookies["curUserId"];
