@@ -86,6 +86,23 @@ app.post("/api/user/addToFavorites", async (req, res) => {
   }
 });
 
+app.get("/api/user/random", async (req, res) => {
+  try {
+    const [users, _] = await db.execute(
+      "SELECT id, username, fun_fact FROM Users ORDER BY RAND() LIMIT 1"
+    );
+    const user = users[0];
+    if (user) {
+      res.json({ user });
+    } else {
+      res.status(404).json({ message: "No users found" });
+    }
+  } catch (err) {
+    console.error("Error fetching random user:", err);
+    res.status(500).json({ message: "Error fetching random user" });
+  }
+});
+
 app.get("/api/recommendeddish", async (req, res) => {
   const { formerlyUserID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
   var userID = req.cookies["curUserId"];

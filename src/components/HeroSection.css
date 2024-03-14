@@ -1,4 +1,3 @@
-
 .hero-container {
   /* background: url('/images/img-home.jpg') center center/cover no-repeat; */
   height: 100vh;
@@ -9,6 +8,15 @@
   align-items: center;
   object-fit: contain;
   background-color: rgb(244, 246, 181);
+  position: relative;
+}
+
+.user-of-the-day {
+  position: absolute;
+  top: 0;
+  right: 0;
+  margin: 20px; /* Adjust as needed */
+  /* Add more styling here as necessary */
 }
 
 .hero-container > h1 {
@@ -21,8 +29,8 @@
   margin-top: 8px;
   color: #000000;
   font-size: 32px;
-  font-family: 'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande',
-    'Lucida Sans', Arial, sans-serif;
+  font-family: "Trebuchet MS", "Lucida Sans Unicode", "Lucida Grande",
+    "Lucida Sans", Arial, sans-serif;
 }
 
 .hero-btns {
