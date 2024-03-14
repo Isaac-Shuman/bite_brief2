@@ -222,40 +222,7 @@ app.post("/api/favdishes", async (req, res) => {
 });
 
 app.get("/api/severeAllergies", async (req, res) => {
-  //send back:
-  //[meal, urlToNutritionPage, whether or not the user liked it]
-  // const meal = req.body.meal;
-  // //const data = { message: meal.length}
-  // const data = [
-  //   { name: 'Item 1     ', likes: 69 },
-  //   { name: 'Item 2     ', likes: 420 },
-  //   { name: 'Item 3     ', likes: 1738 },
-  //   { name: 'Item 4     ', likes: 25 },
-  //   { name: 'Item 5     ', likes: 30 }
-  // ]
-  // res.json(data);
-  console.log("refreshing trending list");
-
-  var updateLikes = `UPDATE Foods RIGHT JOIN (
-      SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
-      ON Foods.id = t.food_id
-      SET likes=cnt;`; // to update like count for foods
-
-  var sql = `SELECT name, likes
-    FROM Foods
-    ORDER BY likes DESC;`;
-
-  var response = "";
-  try {
-    await db.execute(updateLikes);
-    const [rFoods, fFoods] = await db.execute(sql);
-    response = rFoods;
-  } catch (err) {
-    // console.error(err);
-    res.json(err.code); //for example, ER_DUP_ENTRY
-  }
-  // console.log(JSON.stringify(response));
-  res.json(response);
+  await ReturnAllergySeverityJSONFormat();
 });
 
 app.post("/api/profile", async (req, res) => {
@@ -899,21 +866,24 @@ async function getAllergiesIndex() {
   const [allergies] = await db.execute(
     "SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id"
   );
-  // const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
-  // console.log("allergies: ", allergies);
-  // if (allergies.length > 0)
-  // {
-  //   for (const allergy of allergies)
-  //   {
-  //     await db.execute("INSERT INTO Allergies_Severity (allergy_id, allergy_severity) VALUES (?, ?)", [allergy.allergy_id, allergy.allergy_severity]);
-  //     console.log("filling one allergy", allergy);
-  //   }
-  // }
-  // else
-  // {
-  //   console.error("nothing in allergy");
-  // }
-  // console.log("done filling allery info");
+}
+
+async function ReturnAllergySeverityJSONFormat()
+{
+    //console.log("went into filling allergy data");
+    const [allergies] = await db.execute(`
+    SELECT allergy_id, SUM(allergy_severity) AS severity 
+    FROM Allergies_Users 
+    GROUP BY allergy_id 
+    ORDER BY severity DESC`);
+    
+    let allergySeverityDataDictFormat = {};
+    for (let row of allergies) 
+    {
+      allergySeverityDataDictFormat[row.allergy_id] = row.severity;
+    }
+  
+    return allergySeverityDataDictFormat;
 }
 
 //here we have some helper functions for filling tables
