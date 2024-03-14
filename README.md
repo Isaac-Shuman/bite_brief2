@@ -26,7 +26,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
     If you're on Windows, you can use mySQL Workbench or a VSCode extention.
     Yyou have a lot of flexibility with where the database is located.
 4. Update the initialize function server.js to your username, password, and database name.
-   This is the little snippet of the code where you need to enter your credentials:
+   This is the little snippet of the code from the server.js file where you need to enter your credentials:
    const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
