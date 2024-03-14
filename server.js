@@ -6,9 +6,8 @@ const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
 const email_rate = 10000; //every 10 s, low for testing
-const csv = require("fast-csv") //to parse the csv 
-const fs = require("fs") //to be able to gain acsess to the csv file
-
+const csv = require("fast-csv"); //to parse the csv
+const fs = require("fs"); //to be able to gain acsess to the csv file
 
 var bodyParser = require("body-parser");
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -20,7 +19,7 @@ app.use(cookieParser());
 
 const mysql = require("mysql2/promise");
 const { type } = require("@testing-library/user-event/dist/type");
-var nodemailer = require('nodemailer');
+var nodemailer = require("nodemailer");
 let db = main();
 //async keyword lets you use 'await'
 async function main() {
@@ -30,117 +29,115 @@ async function main() {
   //wow that was an awfully long time spent debugging and googling
   db = await initialize();
   await readData();
-  return db
+  return db;
 }
-  // setInterval(()=>{email()}, email_rate); //email all users
+// setInterval(()=>{email()}, email_rate); //email all users
 
-  setInterval(()=>{getAllergiesIndex()}, 60000); //in milliseconds
+setInterval(() => {
+  getAllergiesIndex();
+}, 60000); //in milliseconds
 
-  app.get("/api/data", async (req, res) => {
-    //I hope that async doesn't break something later...
-    rows = await randQuerry("e");
-    console.log(JSON.stringify(rows)); //to see rows on console in readable format
-    const data = { message: rows };
-    res.json(data); //send it off
-  });
+app.get("/api/data", async (req, res) => {
+  //I hope that async doesn't break something later...
+  rows = await randQuerry("e");
+  console.log(JSON.stringify(rows)); //to see rows on console in readable format
+  const data = { message: rows };
+  res.json(data); //send it off
+});
 
-  app.get("/api/search", async (req, res) => {
-    let searchTerm = req.query.term;
-    if (!searchTerm) {
-      return res.status(400).send("Search term is required");
-    }
-    try {
-      let sql = `SELECT * FROM foods WHERE name LIKE ?`;
-      const [results, fields] = await db.execute(sql, [`%${searchTerm}%`]);
-      res.json(results);
-    } catch (err) {
-      console.error(err);
-      res.status(500).send("An error occurred while searching");
-    }
-  });
+app.get("/api/search", async (req, res) => {
+  let searchTerm = req.query.term;
+  if (!searchTerm) {
+    return res.status(400).send("Search term is required");
+  }
+  try {
+    let sql = `SELECT * FROM foods WHERE name LIKE ?`;
+    const [results, fields] = await db.execute(sql, [`%${searchTerm}%`]);
+    res.json(results);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred while searching");
+  }
+});
 
-  app.get("/api/user/uid", async (req, res) => {
-    const data = {userID: req.cookies.curUserId}
-    res.json(data);
-  });
+app.get("/api/user/uid", async (req, res) => {
+  const data = { userID: req.cookies.curUserId };
+  res.json(data);
+});
 
-  //add searching result(fav dish) to database
-  app.post("/api/user/addToFavorites", async (req, res) => {
-    const { formerly_userID, foodID } = req.body; // Extract userId and foodId from the request body
+//add searching result(fav dish) to database
+app.post("/api/user/addToFavorites", async (req, res) => {
+  const { formerly_userID, foodID } = req.body; // Extract userId and foodId from the request body
 
+  var userID = req.cookies["curUserId"];
+  //console.log("userID in add to favorites", userID);
 
-    var userID = req.cookies["curUserId"];
-    //console.log("userID in add to favorites", userID);
+  if (!userID || !foodID) {
+    return res.status(400).json({ message: "Missing user ID or food ID" });
+  }
 
-    if (!userID || !foodID) {
-      return res.status(400).json({ message: "Missing user ID or food ID" });
-    }
+  try {
+    var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; //prevent duplicates
+    await db.execute(sql, [userID, foodID]);
+    res.json({ message: "Favorite added successfully." });
+  } catch (err) {
+    console.error("Error adding favorite:", err);
+    res.status(500).json({ message: "Error adding favorite" });
+  }
+});
 
-    try {
-      var sql = `INSERT INTO Foods_Users (user_id, food_id) VALUES (?, ?) ON DUPLICATE KEY UPDATE user_id = user_id;`; //prevent duplicates
-      await db.execute(sql, [userID, foodID]);
-      res.json({ message: "Favorite added successfully." });
-    } catch (err) {
-      console.error("Error adding favorite:", err);
-      res.status(500).json({ message: "Error adding favorite" });
-    }
-  });
+app.get("/api/recommendeddish", async (req, res) => {
+  const { formerlyUserID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
+  var userID = req.cookies["curUserId"];
+  //console.log("userID in add to favorites", userID);
 
-  app.get("/api/recommendeddish", async (req, res) => {
-    const { formerlyUserID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
-    var userID = req.cookies["curUserId"];
-    //console.log("userID in add to favorites", userID);
+  if (!userID) {
+    return res.status(400).json({ message: "Missing user ID or food ID" });
+  }
 
-    if (!userID) {
-      return res.status(400).json({ message: "Missing user ID or food ID" });
-    }
+  if (!userID || !mealPeriodID) {
+    return res
+      .status(400)
+      .json({ message: "Missing userID or mealPeriodID parameter" });
+  }
 
-    if (!userID || !mealPeriodID) {
-      return res
-        .status(400)
-        .json({ message: "Missing userID or mealPeriodID parameter" });
-    }
-
-    // First we check if the user has diet preferences
-    let hasDietPreferencesQuery = `
+  // First we check if the user has diet preferences
+  let hasDietPreferencesQuery = `
         SELECT COUNT(*) AS dietCount 
         FROM Diets_Users 
         WHERE user_id = ?;
     `;
-    let hasDietPreferences = false;
-    try {
-      const [dietPreferenceResults] = await db.execute(
-        hasDietPreferencesQuery,
-        [userID]
-      );
-      hasDietPreferences = dietPreferenceResults[0].dietCount > 0;
-    } catch (error) {
-      console.error("Error checking diet preferences:", error);
-      return res
-        .status(500)
-        .json({ message: "Error checking diet preferences" });
-    }
+  let hasDietPreferences = false;
+  try {
+    const [dietPreferenceResults] = await db.execute(hasDietPreferencesQuery, [
+      userID,
+    ]);
+    hasDietPreferences = dietPreferenceResults[0].dietCount > 0;
+  } catch (error) {
+    console.error("Error checking diet preferences:", error);
+    return res.status(500).json({ message: "Error checking diet preferences" });
+  }
 
-    // Additional: Check if the user has allergies
-    let hasAllergiesQuery = `
+  // Additional: Check if the user has allergies
+  let hasAllergiesQuery = `
         SELECT COUNT(*) AS allergyCount 
         FROM Allergies_Users 
         WHERE user_id = ?;
     `;
-    let hasAllergies = false;
-    try {
-      const [allergyResults] = await db.execute(hasAllergiesQuery, [userID]);
-      hasAllergies = allergyResults[0].allergyCount > 0;
-    } catch (error) {
-      console.error("Error checking allergies:", error);
-      return res.status(500).json({ message: "Error checking allergies" });
-    }
+  let hasAllergies = false;
+  try {
+    const [allergyResults] = await db.execute(hasAllergiesQuery, [userID]);
+    hasAllergies = allergyResults[0].allergyCount > 0;
+  } catch (error) {
+    console.error("Error checking allergies:", error);
+    return res.status(500).json({ message: "Error checking allergies" });
+  }
 
-    //set a condition that check if the user has diet
-    let sql = "";
-    if (hasDietPreferences) {
-      // User has diet preferences
-      sql = `
+  //set a condition that check if the user has diet
+  let sql = "";
+  if (hasDietPreferences) {
+    // User has diet preferences
+    sql = `
             SELECT Foods.name,Foods.id
             FROM Foods 
             JOIN Diets_Foods ON Diets_Foods.food_id = Foods.id 
@@ -150,9 +147,9 @@ async function main() {
             WHERE Diets_Users.user_id = ?
             AND Foods_MealPeriods.meal_id = ?;
         `;
-    } else if (hasAllergies) {
-      // User does not have diet preferences but has allergies
-      sql = `
+  } else if (hasAllergies) {
+    // User does not have diet preferences but has allergies
+    sql = `
             SELECT Foods.name,Foods.id
             FROM Foods 
             JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
@@ -163,186 +160,187 @@ async function main() {
                 WHERE Allergies_Users.user_id = ?)
             AND Foods_MealPeriods.meal_id = ?;
         `;
-    } else {
-      // User has neither diet preferences nor allergies
-      sql = `
+  } else {
+    // User has neither diet preferences nor allergies
+    sql = `
             SELECT Foods.name,Foods.id
             FROM Foods 
             JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
             WHERE Foods_MealPeriods.meal_id = ?;
         `;
-    }
+  }
 
-    try {
-      const [foods] = await db.execute(
-        sql,
-        hasDietPreferences || hasAllergies
-          ? [userID, mealPeriodID]
-          : [mealPeriodID]
-      );
-      res.json(foods); // Send the retrieved data back to the client
-    } catch (error) {
-      console.error("Error retrieving recommended dishes:", error);
-      res.status(500).json({ message: "Error retrieving recommended dishes" });
-    }
-  });
+  try {
+    const [foods] = await db.execute(
+      sql,
+      hasDietPreferences || hasAllergies
+        ? [userID, mealPeriodID]
+        : [mealPeriodID]
+    );
+    res.json(foods); // Send the retrieved data back to the client
+  } catch (error) {
+    console.error("Error retrieving recommended dishes:", error);
+    res.status(500).json({ message: "Error retrieving recommended dishes" });
+  }
+});
 
-  app.post("/api/favdishes", async (req, res) => {
-    //send back:
-    //[meal, urlToNutritionPage, whether or not the user liked it]
-    // const meal = req.body.meal;
-    // //const data = { message: meal.length}
-    // const data = [
-    //   { name: 'Item 1     ', likes: 69 },
-    //   { name: 'Item 2     ', likes: 420 },
-    //   { name: 'Item 3     ', likes: 1738 },
-    //   { name: 'Item 4     ', likes: 25 },
-    //   { name: 'Item 5     ', likes: 30 }
-    // ]
-    // res.json(data);
-    console.log("refreshing trending list");
+app.post("/api/favdishes", async (req, res) => {
+  //send back:
+  //[meal, urlToNutritionPage, whether or not the user liked it]
+  // const meal = req.body.meal;
+  // //const data = { message: meal.length}
+  // const data = [
+  //   { name: 'Item 1     ', likes: 69 },
+  //   { name: 'Item 2     ', likes: 420 },
+  //   { name: 'Item 3     ', likes: 1738 },
+  //   { name: 'Item 4     ', likes: 25 },
+  //   { name: 'Item 5     ', likes: 30 }
+  // ]
+  // res.json(data);
+  console.log("refreshing trending list");
 
-    var updateLikes = `UPDATE Foods RIGHT JOIN (
+  var updateLikes = `UPDATE Foods RIGHT JOIN (
       SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
       ON Foods.id = t.food_id
       SET likes=cnt;`; // to update like count for foods
 
-    var sql = `SELECT name, likes
+  var sql = `SELECT name, likes
     FROM Foods
     ORDER BY likes DESC;`;
 
-    var response = "";
-    try {
-      await db.execute(updateLikes);
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    // console.log(JSON.stringify(response));
-    res.json(response);
-  });
+  var response = "";
+  try {
+    await db.execute(updateLikes);
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  // console.log(JSON.stringify(response));
+  res.json(response);
+});
 
-  app.post("/api/profile", async (req, res) => {
-    //send back:
-    //[meal, urlToNutritionPage, whether or not the user liked it]
-    const meal = req.body.meal;
-    //const data = { message: meal.length}
-    const data = [
-      { name: "Item 1     ", likes: 69 },
-      { name: "Item 2     ", likes: 420 },
-      { name: "Item 3     ", likes: 1738 },
-      { name: "Item 4     ", likes: 25 },
-      { name: "Item 5     ", likes: meal.length },
-    ];
-    res.json(data);
-  });
+app.post("/api/profile", async (req, res) => {
+  //send back:
+  //[meal, urlToNutritionPage, whether or not the user liked it]
+  const meal = req.body.meal;
+  //const data = { message: meal.length}
+  const data = [
+    { name: "Item 1     ", likes: 69 },
+    { name: "Item 2     ", likes: 420 },
+    { name: "Item 3     ", likes: 1738 },
+    { name: "Item 4     ", likes: 25 },
+    { name: "Item 5     ", likes: meal.length },
+  ];
+  res.json(data);
+});
 
-  app.post("/api/user/myFavDishes", async (req, res) => {
-    //const formerly_userID = req.body.id;
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+app.post("/api/user/myFavDishes", async (req, res) => {
+  //const formerly_userID = req.body.id;
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql = `SELECT Foods.name, Users.username, Foods.id
+  var sql = `SELECT Foods.name, Users.username, Foods.id
   FROM Foods
   JOIN Foods_Users ON Foods_Users.food_id = Foods.id
   JOIN Users ON Foods_Users.user_id = Users.id
   WHERE Users.id = ${userID};`;
 
-    //console.log("userID when requesting favdishes: %s", userID);
-    //console.log("cookie in post is storing %s", req.cookies);
+  //console.log("userID when requesting favdishes: %s", userID);
+  //console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    res.json(response);
-  });
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  res.json(response);
+});
 
-  app.post("/api/user/addAllergy", async (req, res) => {
-    var allergyID = req.body.allergyID;
-    var userID = req.cookies["curUserId"];
+app.post("/api/user/addAllergy", async (req, res) => {
+  var allergyID = req.body.allergyID;
+  var userID = req.cookies["curUserId"];
 
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql = `INSERT INTO Allergies_Users (allergy_id, user_id) VALUES
+  var sql = `INSERT INTO Allergies_Users (allergy_id, user_id) VALUES
    (${allergyID}, ${userID}) ON DUPLICATE KEY UPDATE user_id = user_id;`;
 
-    // console.log("userID when adding allergy: %s", userID);
-    // console.log("cookie in post is storing %s", req.cookies);
+  // console.log("userID when adding allergy: %s", userID);
+  // console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-       await db.execute(sql);
-       res.json({ message: "Allergy added successfully." });
-      } catch (err) {
-        console.error("Error adding allergy:", err);
-        res.status(500).json({ message: "Error adding allergy" });
-  }});
+  var response = "";
+  try {
+    await db.execute(sql);
+    res.json({ message: "Allergy added successfully." });
+  } catch (err) {
+    console.error("Error adding allergy:", err);
+    res.status(500).json({ message: "Error adding allergy" });
+  }
+});
 
+app.post("/api/user/addDiet", async (req, res) => {
+  var dietID = req.body.dietID;
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-  app.post("/api/user/addDiet", async (req, res) => {
-    var dietID = req.body.dietID;
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
-
-    var sql = `INSERT INTO Diets_Users (diet_id, user_id) VALUES
+  var sql = `INSERT INTO Diets_Users (diet_id, user_id) VALUES
    (${dietID}, ${userID}) ON DUPLICATE KEY UPDATE user_id = user_id;`;
 
-    // console.log("userID when adding diet: %s", userID);
-    // console.log("cookie in post is storing %s", req.cookies);
+  // console.log("userID when adding diet: %s", userID);
+  // console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-      await db.execute(sql);
-      res.json({ message: "Diet added successfully." });
-     } catch (err) {
-       console.error("Error adding diet:", err);
-       res.status(500).json({ message: "Error adding diet" });
- }});
+  var response = "";
+  try {
+    await db.execute(sql);
+    res.json({ message: "Diet added successfully." });
+  } catch (err) {
+    console.error("Error adding diet:", err);
+    res.status(500).json({ message: "Error adding diet" });
+  }
+});
 
-  app.post("/api/user/myDiets", async (req, res) => {
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+app.post("/api/user/myDiets", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql = `SELECT Diets.name, Diets.id
+  var sql = `SELECT Diets.name, Diets.id
   FROM Diets
   JOIN Diets_Users ON Diets_Users.diet_id = Diets.id
   WHERE Diets_Users.user_id = ${userID}
   ORDER BY Diets.id ASC;`;
 
-   // console.log("userID when requesting my diets: %s", userID);
-    //console.log("cookie in post is storing %s", req.cookies);
+  // console.log("userID when requesting my diets: %s", userID);
+  //console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    res.json(response);
-  });
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  res.json(response);
+});
 
-  app.post("/api/user/leftDiets", async (req, res) => {
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+app.post("/api/user/leftDiets", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
   var sql = `SELECT Diets.name, Diets.id
   FROM Diets
@@ -352,60 +350,58 @@ async function main() {
     JOIN Diets_Users ON Diets_Users.diet_id = Diets.id
     WHERE Diets_Users.user_id = ${userID}
   )`;
-  
-  // LEFT JOIN Diets_Users ON  Diets_Users.diet_id = Diets.id   
-  // WHERE Diets_Users.user_id IS NULL OR Diets_Users.user_id != ${userID} 
+
+  // LEFT JOIN Diets_Users ON  Diets_Users.diet_id = Diets.id
+  // WHERE Diets_Users.user_id IS NULL OR Diets_Users.user_id != ${userID}
   // GROUP BY Diets.id
   // ORDER BY Diets.id ASC;`;
 
+  // console.log("userID when requesting left diets: %s", userID);
+  // console.log("cookie in post is storing %s", req.cookies);
 
-    // console.log("userID when requesting left diets: %s", userID);
-    // console.log("cookie in post is storing %s", req.cookies);
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  res.json(response);
+});
 
-    var response = "";
-    try {
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    res.json(response);
-  });
+app.post("/api/user/myAllergies", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-  app.post("/api/user/myAllergies", async (req, res) => {
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
-
-    var sql = `SELECT Allergies.name, Allergies.id
+  var sql = `SELECT Allergies.name, Allergies.id
   FROM Allergies
   JOIN Allergies_Users ON Allergies_Users.allergy_id = Allergies.id
   WHERE Allergies_Users.user_id = ${userID};`;
 
-    console.log("userID when requesting my allergies: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+  console.log("userID when requesting my allergies: %s", userID);
+  console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    res.json(response);
-  });
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  res.json(response);
+});
 
-  app.post("/api/user/leftAllergies", async (req, res) => {
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+app.post("/api/user/leftAllergies", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-
-    var sql = `SELECT Allergies.name, Allergies.id
+  var sql = `SELECT Allergies.name, Allergies.id
     FROM Allergies
     WHERE Allergies.id NOT IN (
       SELECT Allergies.id
@@ -414,150 +410,150 @@ async function main() {
       WHERE Allergies_Users.user_id = ${userID}
     )`;
 
-    console.log("userID when requesting left allergies: %s", userID);
-    console.log("cookie in post is storing %s", req.cookies);
+  console.log("userID when requesting left allergies: %s", userID);
+  console.log("cookie in post is storing %s", req.cookies);
 
-    var response = "";
-    try {
-      const [rFoods, fFoods] = await db.execute(sql);
-      response = rFoods;
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-    }
-    res.json(response);
-  });
+  var response = "";
+  try {
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  res.json(response);
+});
 
-  app.delete("/api/user/myFavDishes", async (req, res) => {
-    const foodID = req.body.Fid;
-    const formerly_userID = req.body.Uid;
+app.delete("/api/user/myFavDishes", async (req, res) => {
+  const foodID = req.body.Fid;
+  const formerly_userID = req.body.Uid;
 
-    console.log("cookie in delete is storing %s", req.cookies);
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+  console.log("cookie in delete is storing %s", req.cookies);
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql1 = `DELETE FROM Foods_Users
+  var sql1 = `DELETE FROM Foods_Users
     WHERE user_id = ${userID} AND food_id = ${foodID};`;
-    var sql2 = `UPDATE Foods SET likes = likes - 1
+  var sql2 = `UPDATE Foods SET likes = likes - 1
     WHERE id = ${foodID};`; //also update like count
 
-    console.log(sql1);
-    var response = "";
-    try {
-      await db.execute(sql1);
-      await db.execute(sql2);
-    } catch (err) {
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-      return;
-    }
+  console.log(sql1);
+  var response = "";
+  try {
+    await db.execute(sql1);
+    await db.execute(sql2);
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
     return;
-  });
+  }
+  return;
+});
 
-  app.delete("/api/user/myDiets", async (req, res) => {
-    const dietID = req.body.Did;
+app.delete("/api/user/myDiets", async (req, res) => {
+  const dietID = req.body.Did;
 
-    console.log("cookie in delete is storing %s", req.cookies);
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+  console.log("cookie in delete is storing %s", req.cookies);
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql = `DELETE FROM Diets_Users
+  var sql = `DELETE FROM Diets_Users
     WHERE user_id = ${userID} AND diet_id = ${dietID};`;
 
-    console.log(sql);
-    try {
-      await db.execute(sql);
-    } catch (err) { 
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-      return;
-    }
+  console.log(sql);
+  try {
+    await db.execute(sql);
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
     return;
-  });
+  }
+  return;
+});
 
-  app.delete("/api/user/myAllergies", async (req, res) => {
-    const allergyID = req.body.Aid;
+app.delete("/api/user/myAllergies", async (req, res) => {
+  const allergyID = req.body.Aid;
 
-    console.log("cookie in delete is storing %s", req.cookies);
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
+  console.log("cookie in delete is storing %s", req.cookies);
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
 
-    var sql = `DELETE FROM Allergies_Users
+  var sql = `DELETE FROM Allergies_Users
     WHERE user_id = ${userID} AND allergy_id = ${allergyID};`;
-    console.log(sql);
+  console.log(sql);
 
-    try {
-      await db.execute(sql);
-    } catch (err) { 
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-      return;
-    }
+  try {
+    await db.execute(sql);
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
     return;
-  });
+  }
+  return;
+});
 
-  app.post('/api/user', async (req, res) => {
-    const {data} = req.body
+app.post("/api/user", async (req, res) => {
+  const { data } = req.body;
 
-    if (!data) {
-      return res.status(400).json({ error: "No data passed" });
-    }
-    console.log("name received by api/signup: %s", data.name);
-    console.log("email received by api/signup %s", data.email);
-    // data.name, data.email, data.picture for Google user profile data
+  if (!data) {
+    return res.status(400).json({ error: "No data passed" });
+  }
+  console.log("name received by api/signup: %s", data.name);
+  console.log("email received by api/signup %s", data.email);
+  // data.name, data.email, data.picture for Google user profile data
 
-
-    //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
-    //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
-    const searchQuery = `SELECT id 
+  //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
+  //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
+  const searchQuery = `SELECT id 
     FROM Users
     WHERE email = '${data.email}';`;
-    // search if user email is in database
+  // search if user email is in database
 
-    const updateQuery = `INSERT INTO Users (username, email) VALUES
+  const updateQuery = `INSERT INTO Users (username, email) VALUES
     ('${data.name}', '${data.email}');`;
-    // updates database with user data
+  // updates database with user data
 
-    try {
-      const [user,fields] = await db.execute(searchQuery)
+  try {
+    const [user, fields] = await db.execute(searchQuery);
 
-      if (user.length == 0) {
-        //email DNE
-        await db.execute(updateQuery);
-      }
-      const [u,f] = await db.execute(searchQuery)
-      // console.log(typeof(u))
-      // console.log(u)
-      var cuid = Number(u[0]['id'])
-      res.cookie("curUserId", cuid);
-      console.log("curUserID dredged from database in api/signup %s", cuid);
-      
+    if (user.length == 0) {
+      //email DNE
+      await db.execute(updateQuery);
     }
-    catch (error) {
-      console.log(error.code)
-      res.status(400).json(error)
-    }
+    const [u, f] = await db.execute(searchQuery);
+    // console.log(typeof(u))
+    // console.log(u)
+    var cuid = Number(u[0]["id"]);
+    res.cookie("curUserId", cuid);
+    console.log("curUserID dredged from database in api/signup %s", cuid);
+  } catch (error) {
+    console.log(error.code);
+    res.status(400).json(error);
+  }
 
-    res.send("success")
-  })  
+  res.send("success");
+});
 
-  app.post('/api/user/userIndices', async (req, res) => {
-    const userIndices = req.body.userIndices;
-    console.log("userIndices where index = corresponding Allergy ID", userIndices);
-    console.log("cookie in delete is storing %s", req.cookies);
+app.post("/api/user/userIndices", async (req, res) => {
+  const userIndices = req.body.userIndices;
+  console.log(
+    "userIndices where index = corresponding Allergy ID",
+    userIndices
+  );
+  console.log("cookie in delete is storing %s", req.cookies);
 
-    var userID = req.cookies["curUserId"];
-    if (!userID) {
-      return res.status(400).json({ message: "Missing userID parameter" });
-    }
-    
-    /*
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
+
+  /*
     var sq1 = ????
     try {
       await db.execute(sql);
@@ -567,14 +563,13 @@ async function main() {
       return;
     }
     */
-    res.send("useless value");
-    return;
-  });
+  res.send("useless value");
+  return;
+});
 
-  app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
-  });
-
+app.listen(port, () => {
+  console.log(`Server is running on port ${port}`);
+});
 
 //////helper functions:
 
@@ -583,15 +578,15 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Fizzy19123",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    password: "Welcome2023!",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
 
   //I labeled the helper tables in alphabetical order, btw
   await connection.execute("DROP TABLE IF EXISTS Foods_Users;");
-  await connection.execute("DROP TABLE IF EXISTS Allergies_Users;"); 
+  await connection.execute("DROP TABLE IF EXISTS Allergies_Users;");
   //await connection.execute("DROP TABLE IF EXISTS Allergies_Severity;");
   await connection.execute("DROP TABLE IF EXISTS Diets_Users;");
   await connection.execute("DROP TABLE IF EXISTS Allergies_Foods;");
@@ -603,8 +598,6 @@ async function initialize() {
   await connection.execute("DROP TABLE IF EXISTS Allergies;");
   await connection.execute("DROP TABLE IF EXISTS Diets;");
   await connection.execute("DROP TABLE IF EXISTS MealPeriods;"); //MealPeriod
-
-
 
   var createFoodsTable = `
   CREATE TABLE Foods (
@@ -666,7 +659,7 @@ async function initialize() {
   // CREATE TABLE IF NOT EXISTS Allergies_Severity (
   //    allergy_name BIGINT,
   //    allergy_severity_index INT
-  // );`; 
+  // );`;
 
   var createDietsUsersTable = `
   CREATE TABLE IF NOT EXISTS Diets_Users (
@@ -715,7 +708,7 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
       createMealPeriodsTable
     );
     await connection.execute(createFoodsUsersTable);
-    await connection.execute(createAllergiesUsersTable); 
+    await connection.execute(createAllergiesUsersTable);
     //await connection.execute(createAllergySeverityTable);
     await connection.execute(createDietsUsersTable);
     await connection.execute(createAllergiesFoodsTable);
@@ -732,9 +725,11 @@ CREATE TABLE IF NOT EXISTS Diets_Foods (
   return connection;
 }
 
-async function getAllergiesIndex(){
+async function getAllergiesIndex() {
   console.log("went into filling allergy data");
-  const [allergies] = await db.execute("SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id");
+  const [allergies] = await db.execute(
+    "SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id"
+  );
   // const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
   // console.log("allergies: ", allergies);
   // if (allergies.length > 0)
@@ -829,14 +824,15 @@ async function findAnAllergie(allergie_name) {
   }
 }
 //может их совместить?
-async function findADiet(diet_name){ 
-  if (diet_name === "Vegetarianegan")
-  {
+async function findADiet(diet_name) {
+  if (diet_name === "Vegetarianegan") {
     //console.log("Detected a vegan diet: ", diet_name);
     diet_name = "Vegan";
   }
-  const [diets] = await db.execute("SELECT id FROM Diets WHERE name = (?)", [diet_name]);
-  if (diets.length > 0){
+  const [diets] = await db.execute("SELECT id FROM Diets WHERE name = (?)", [
+    diet_name,
+  ]);
+  if (diets.length > 0) {
     const FoundDietID = diets[0].id;
     //console.log("Dish name: ", diets[0]);
     return FoundDietID;
@@ -930,35 +926,32 @@ async function readData() {
                 await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
               }
             }
-          
-          if (header_csv.startsWith("Tag"))
-          {
-            const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
-            //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
-            const Allergie_id = await findAnAllergie(tag);
-            const Diet_id = await findADiet(tag);
-            if (Allergie_id) {
-              //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-              await InsertIdsIntoAllergies_FoodsTable(inserted_food_id, Allergie_id);
-            }
-            if (Diet_id) {
-              await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+
+            if (header_csv.startsWith("Tag")) {
+              const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
+              //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
+              const Allergie_id = await findAnAllergie(tag);
+              const Diet_id = await findADiet(tag);
+              if (Allergie_id) {
+                //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
+                await InsertIdsIntoAllergies_FoodsTable(
+                  inserted_food_id,
+                  Allergie_id
+                );
+              }
+              if (Diet_id) {
+                await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
+              }
             }
           }
-        }})
-    .on("end", () => {
-      console.log("done parsing and filling tables")
-    })
+        })
+        .on("end", () => {
+          console.log("done parsing and filling tables");
+        });
 
-    //await fillAllergiesSeverityTable();
+      //await fillAllergiesSeverityTable();
 
-
-
-
-
-
-
-  /*
+      /*
   var foodIn =
     "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
   var allergyIn =
@@ -970,7 +963,7 @@ async function readData() {
       ;`;
 */
 
-  var usersIn = `INSERT INTO Users (username, email) VALUES
+      var usersIn = `INSERT INTO Users (username, email) VALUES
     ('blen', 'bitebriefnoreply@gmail.com'),
     ('Mashamellow', 'bitebriefnoreply@gmail.com'),
     ('Koopa', 'bitebriefnoreply@gmail.com'),
@@ -979,107 +972,106 @@ async function readData() {
     ('Kyuki','bitebriefnoreply@gmail.com')
   ;`;
 
-  var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
+      var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
     (1, 6),
     (2, 6),
     (3, 1), (3, 6),
     (4, 2), (4, 5), (4, 6),
     (5,1), (5,2), (5,3), (5,4), (5,5), (5,6)
   ;`;
-  var allergiesUsersIn = `INSERT INTO Allergies_Users (allergy_id, user_id, allergy_severity) VALUES 
+      var allergiesUsersIn = `INSERT INTO Allergies_Users (allergy_id, user_id, allergy_severity) VALUES 
     (1, 4, 1), (1, 5, 1), (2, 1, 10)
   ;`;
-  var dietsUsersIn = `INSERT INTO Diets_Users (diet_id, user_id) VALUES 
+      var dietsUsersIn = `INSERT INTO Diets_Users (diet_id, user_id) VALUES 
   (3, 4), (1, 3)
 ;`;
-  // var allergiesFoodsIn = `INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES
-  // (1, 1), (1, 2), (1, 4),
-  // (2, 1), (2,2),
-  // (3, 2)
-;
-//   var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
-//   (1, 3), (1,5),
-//   (2, 1), (2, 2), (2, 4),
-//   (3, 3), (3, 5)
-// ;`;
+      // var allergiesFoodsIn = `INSERT INTO Allergies_Foods (allergy_id, food_id) VALUES
+      // (1, 1), (1, 2), (1, 4),
+      // (2, 1), (2,2),
+      // (3, 2)
+      //   var dietsFoodsIn = `INSERT INTO Diets_Foods (diet_id, food_id) VALUES
+      //   (1, 3), (1,5),
+      //   (2, 1), (2, 2), (2, 4),
+      //   (3, 3), (3, 5)
+      // ;`;
 
-  var updateLikes = `UPDATE Foods RIGHT JOIN (
+      var updateLikes = `UPDATE Foods RIGHT JOIN (
 SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
 ON Foods.id = t.food_id
 SET likes=cnt;`;
 
-  try {
-    //const [rFoods, fFoods] = await db.execute(foodIn);
-    await db.execute(allergyIn);
-    await db.execute(dietIn);
-    await db.execute(MealPeriodIn);
-    await db.execute(usersIn);
-    await db.execute(foodsUsersIn);
-    await db.execute(allergiesUsersIn);
-    await db.execute(dietsUsersIn);
-    //await db.execute(allergiesFoodsIn);
-    //await db.execute(dietsFoodsIn);
+      try {
+        //const [rFoods, fFoods] = await db.execute(foodIn);
+        await db.execute(allergyIn);
+        await db.execute(dietIn);
+        await db.execute(MealPeriodIn);
+        await db.execute(usersIn);
+        await db.execute(foodsUsersIn);
+        await db.execute(allergiesUsersIn);
+        await db.execute(dietsUsersIn);
+        //await db.execute(allergiesFoodsIn);
+        //await db.execute(dietsFoodsIn);
 
-    await db.execute(updateLikes);
-  } catch (err) {
-    console.log(err);
-  }
-}) }
+        await db.execute(updateLikes);
+      } catch (err) {
+        console.log(err);
+      }
+    }
+  );
+}
 
 // https://www.w3schools.com/nodejs/nodejs_email.asp
 // gmail password for this account is: "bitebriefCS35L"
-async function email(){
+async function email() {
   var transporter = await nodemailer.createTransport({
-    service: 'gmail',
+    service: "gmail",
     auth: {
-      user: 'bitebriefnoreply@gmail.com',
-      pass: 'xjpp oelj zrxb hwxx'
-    }
+      user: "bitebriefnoreply@gmail.com",
+      pass: "xjpp oelj zrxb hwxx",
+    },
   });
   var getUsers = `SELECT id, username, email FROM Users`;
-  try{
+  try {
     const [rUsers, fUsers] = await db.execute(getUsers);
-    for(var i=0; i<rUsers.length; i++){
+    for (var i = 0; i < rUsers.length; i++) {
       //probably somehow join with food availability later
       var sql = `SELECT MealPeriods.name AS meal, Foods.name FROM Foods 
       JOIN Foods_Users ON Foods_Users.food_id = Foods.id
       JOIN Foods_MealPeriods ON Foods.id = Foods_MealPeriods.food_id
       JOIN MealPeriods ON MealPeriods.id = Foods_MealPeriods.meal_id
       WHERE Foods_Users.user_id = ${rUsers[i].id} ORDER BY Foods_MealPeriods.meal_id ASC
-      ;`
+      ;`;
       // console.log(rUsers[i]);
       const [rFoods, fFoods] = await db.execute(sql);
       // var msg = JSON.stringify(rFoods);
       msg = `Hello ${rUsers[i].username},\nYour favorite foods available are:\n`;
-      msg = msg + "Meal".padEnd(15, ' ') + "Food\n";
-      msg = msg + "".padEnd(40, '=') + "\n";
-      for(var j=0; j<rFoods.length; j++){
+      msg = msg + "Meal".padEnd(15, " ") + "Food\n";
+      msg = msg + "".padEnd(40, "=") + "\n";
+      for (var j = 0; j < rFoods.length; j++) {
         // console.log(rFoods[j])
-        msg = msg + rFoods[j].meal.padEnd(15, ' ') + rFoods[j].name + `\n`;
+        msg = msg + rFoods[j].meal.padEnd(15, " ") + rFoods[j].name + `\n`;
       }
 
       console.log(msg);
 
       var mailOptions = {
-        from: 'bitebriefnoreply@gmail.com',
+        from: "bitebriefnoreply@gmail.com",
         to: `${rUsers[i].email}`,
         subject: `Sending your fav foods, ${rUsers[i].username}`,
-        text: `${msg}`
-      }
+        text: `${msg}`,
+      };
 
-      transporter.sendMail(mailOptions, function(error, info){
+      transporter.sendMail(mailOptions, function (error, info) {
         if (error) {
           console.log(error);
         } else {
-          console.log('Email sent: ' + info.response);
+          console.log("Email sent: " + info.response);
         }
       });
-
     }
-
   } catch (err) {
     console.log(err);
- }
+  }
 }
 
 async function randQuerry(arg) {
