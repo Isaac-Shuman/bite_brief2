@@ -19,6 +19,7 @@ const Trending = ({loggedIn}) => {
     }) 
       .then(response => {
         setPopularItems(response.data);
+        console.log("The trending items are" , popularItems)
       })
       .catch(error => {
         console.error(error);
