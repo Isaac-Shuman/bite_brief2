@@ -879,14 +879,21 @@ async function ReturnAllergySeverityJSONFormat()
     JOIN Allergies_Users ON Allergies.id = Allergies_Users.allergy_id 
     GROUP BY Allergies.id 
     ORDER BY severity DESC`);
+
+    let allergiesArray = allergies.map(row => ({
+      name: row.allergy_name, 
+      severity: row.severity
+  }));
+
+  return allergiesArray;
     
-    let allergySeverityDataDictFormat = {};
-    for (let row of allergies) 
-    {
-      allergySeverityDataDictFormat[row.allergy_name] = row.severity;
-    }
+    // let allergySeverityDataDictFormat = {};
+    // for (let row of allergies) 
+    // {
+    //   allergySeverityDataDictFormat[row.allergy_name] = row.severity;
+    // }
   
-    return allergySeverityDataDictFormat;
+    // return allergySeverityDataDictFormat;
 }
 
 //here we have some helper functions for filling tables
