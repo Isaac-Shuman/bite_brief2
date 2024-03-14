@@ -45,7 +45,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
 The navbar may not be fully visible if your window is not maximized.
 
 #### Worked on the Project:
-Isaac Shuman, Maria Koldubaeva, Kelvin Jiang, Zihan Xia
+Isaac Shuman, Maria Koldubaeva, Kelvin Jiang, Zihan Xia, Yue Wu, Beatrice Leung
 
 The database backend was modeled after the examples on the mySQL2 API documentation https://sidorares.github.io/node-mysql2/docs/examples/queries/simple-queries
 
