@@ -877,7 +877,7 @@ async function ReturnAllergySeverityJSONFormat()
     SUM(Allergies_Users.allergy_severity) AS severity 
     FROM Allergies  
     JOIN Allergies_Users ON Allergies.id = Allergies_Users.allergy_id 
-    GROUP BY Allergies_Users.allergy.id 
+    GROUP BY Allergies.id 
     ORDER BY severity DESC`);
     
     let allergySeverityDataDictFormat = {};
