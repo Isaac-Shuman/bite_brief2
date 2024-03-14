@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import "./RecommendedDish.css";
 
-export default function RecommendedDishes({loggedIn}) {
+export default function RecommendedDishes({ loggedIn }) {
   const [userID, setUserID] = useState("");
   const [mealPeriodID, setMealPeriodID] = useState("");
   const [recommendedDishes, setRecommendedDishes] = useState([]);
@@ -89,65 +89,65 @@ export default function RecommendedDishes({loggedIn}) {
   }, [userID]);
 
   if (loggedIn) {
-  return (
-    <div className="recommended-dishes">
-      <input
-        type="text"
-        className="input-box"
-        placeholder="Input User ID"
-        value={userID}
-        onChange={(e) => setUserID(e.target.value)}
-      />
-      <input
-        type="text"
-        className="input-box"
-        placeholder="Input Meal Period ID"
-        value={mealPeriodID}
-        onChange={(e) => setMealPeriodID(e.target.value)}
-      />
-      <button
-        className="button"
-        onClick={fetchRecommendedDishes}
-        disabled={isLoading}
-      >
-        Fetch Dishes
-      </button>
-      {isLoading ? (
-        <p>Loading...</p>
-      ) : (
-        <ul>
-          {recommendedDishes.slice(0, 20).map((dish) => {
-            // console.log(dish);
-
-            // return the JSX for each dish
-            return (
-              <li key={dish.id}>
-                <span className="dish-name">{dish.name}</span> -{" "}
-                <button
-                  onClick={() => {
-                    // console.log(`Adding dish to favorites: ${dish.id}`);
-                    addToFavorites(dish.id);
-                  }}
-                >
-                  Add to Favorites
-                </button>
-              </li>
-            );
-          })}
-        </ul>
-      )}
-      {/* <h2>Your Favorite Foods</h2> */}
-      <ul>
-        {favoriteDishes.map((dish) => (
-          <li key={dish.id}>{dish.name}</li>
-        ))}
-      </ul>
-    </div>
-  );
-  }
-  else {
     return (
-      <h1> Please login </h1>
-    )
+      <div className="recommended-dishes">
+        <input
+          type="text"
+          className="input-box"
+          placeholder="Input User ID"
+          value={userID}
+          onChange={(e) => setUserID(e.target.value)}
+        />
+        <select
+          className="input-box"
+          value={mealPeriodID}
+          onChange={(e) => setMealPeriodID(e.target.value)}
+        >
+          <option value="">Select Meal Period</option>
+          <option value="1">Breakfast</option>
+          <option value="2">Lunch</option>
+          <option value="3">Dinner</option>
+        </select>
+        <button
+          className="button"
+          onClick={fetchRecommendedDishes}
+          disabled={isLoading}
+        >
+          Fetch Dishes
+        </button>
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : (
+          <ul>
+            {recommendedDishes.slice(0, 20).map((dish) => {
+              // console.log(dish);
+
+              // return the JSX for each dish
+              return (
+                <li key={dish.id}>
+                  <span className="dish-name">{dish.name}</span> -{" "}
+                  <button
+                    onClick={() => {
+                      // console.log(`Adding dish to favorites: ${dish.id}`);
+                      addToFavorites(dish.id);
+                    }}
+                  >
+                    Add to Favorites
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+        {/* <h2>Your Favorite Foods</h2> */}
+        <ul>
+          {favoriteDishes.map((dish) => (
+            <li key={dish.id}>{dish.name}</li>
+          ))}
+        </ul>
+      </div>
+    );
+  } else {
+    return <h1> Please login </h1>;
   }
 }
