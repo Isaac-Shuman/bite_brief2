@@ -65,7 +65,7 @@ export default function RecommendedDishes({ loggedIn }) {
     }
 
     try {
-      const response = await axios.post("/api/addToFavorites", {
+      const response = await axios.post("/api/user/addToFavorites", {
         userID,
         foodID,
       });

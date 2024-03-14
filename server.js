@@ -618,11 +618,37 @@ async function GetAllergySeverityInfoAboutAUser(UserID)
 
   return allergyDataDictFormat;
 }
+app.get('/api/user/userIndices', async (req, res) => {
+  //const userIndices = req.body.userIndices;
+  //console.log("userIndices where index = corresponding Allergy ID", userIndices);
+  console.log("cookie in delete is storing %s", req.cookies);
+
+  var userID = req.cookies["curUserId"];
+  if (!userID) {
+    return res.status(400).json({ message: "Missing userID parameter" });
+  }
+
+
+  //вот сюда видимо надо поместить вызов функции?
+
+  //await InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
+  const result = await GetAllergySeverityInfoAboutAUser(userID);
+
+  const newArray = Array.from({ length: 20 }, (_, index) => (result ? result[index] : 0) || 0);
+  //I think here is where the function should get called from
+
+  //to do1: мне дают данные клиента, нужно положить в базу данных
+  //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
+  //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
+  
+  res.json(newArray);
+  return;
+});
 
   app.post('/api/user/userIndices', async (req, res) => {
     const userIndices = req.body.userIndices;
     console.log("userIndices where index = corresponding Allergy ID", userIndices);
-    console.log("cookie in delete is storing %s", req.cookies);
+    //console.log("cookie in delete is storing %s", req.cookies);
 
     var userID = req.cookies["curUserId"];
     if (!userID) {
@@ -632,25 +658,18 @@ async function GetAllergySeverityInfoAboutAUser(UserID)
   
     //вот сюда видимо надо поместить вызов функции?
 
-    InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
-    GetAllergySeverityInfoAboutAUser(userID);
+    await InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
+    //const result = await GetAllergySeverityInfoAboutAUser(userID);
+
+    //const newArray = Array.from({ length: 20 }, (_, index) => result[index] || 0);
     //I think here is where the function should get called from
 
     //to do1: мне дают данные клиента, нужно положить в базу данных
     //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
     //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
     
-    /*
-    var sq1 = ????
-    try {
-      await db.execute(sql);
-    } catch (err) { 
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-      return;
-    }
-    */
-    res.send("useless value");
+    //res.json(newArray);
+    res.send("success")
     return;
   });
 
