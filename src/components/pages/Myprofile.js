@@ -225,21 +225,7 @@ function YourAllergies({
   );
 }
 
-function AddFunFact() {
-  const [funFact, setFunFact] = useState("");
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await axios.post("/api/user/addFact", { fact: funFact });
-      alert(response.data.message); // Display success message
-      setFunFact(""); // Clear the input after successful submission
-    } catch (error) {
-      console.error("Error adding fun fact:", error);
-      alert("Failed to add fun fact.");
-    }
-  };
-
+function AddFunFact({funFact, setFunFact, handleSubmit}) {
   return (
     <>
       <div>
@@ -267,6 +253,7 @@ export default function Myprofile() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [leftAllergies, setLeftAllergies] = useState([Array().fill(null)]);
   const [leftDiets, setLeftDiets] = useState([Array().fill(null)]);
+  const [funFact, setFunFact] = useState("");
 
   ////////////Beatrice:
   //get this user's favorite foods from the server
@@ -276,7 +263,7 @@ export default function Myprofile() {
   const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
   const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
-  const [funFact, setFunFact] = useState("");
+
 
   const loggedin = useContext(SignInContext);
 
@@ -574,6 +561,18 @@ export default function Myprofile() {
     console.log("allergID is %i", allergyID);
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post("/api/user/addFact", { fact: funFact });
+      alert(response.data.message); // Display success message
+      //setFunFact(""); // Clear the input after successful submission
+    } catch (error) {
+      console.error("Error adding fun fact:", error);
+      alert("Failed to add fun fact.");
+    }
+  };
+
   ////////////
   if (loggedin) {
     return (
@@ -595,7 +594,7 @@ export default function Myprofile() {
           updateAllergyIndex={updateAllergyIndex}
         />
         <YourFavorites favFoods={favFoods} removeFood={removeFood} />
-        <AddFunFact />
+        <AddFunFact funFact={funFact} setFunFact={setFunFact} handleSubmit={handleSubmit}/>
       </div>
     );
   } else {
