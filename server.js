@@ -440,6 +440,54 @@ async function main() {
 
     res.send("success")
   })  
+///////
+
+async function InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID) //this function takes data about allergy severity from the client and inserts it into the DB
+{
+  for (const [allergy_id, severity] of Object.entries(userIndices))
+  {
+    await db.execute(`
+    UPDATE Allergies_Users 
+    SET allergy_severity = (?) 
+    WHERE allergy_id = (?) AND user_id = (?)`, [severity, allergy_id, userID]);
+  }
+  // for(Indicy of userIndices)
+  // {
+  //   [resultat] = await db.execute(`
+  //   INSERT INTO Allergies_Users (allergy_severity) VALUES (?)
+  //    WHERE Allergy_is = (?)`, Indicy.allergy_severity, Indicy.Allergie_id);
+  // }
+}
+
+  app.post('/api/user/userIndices', async (req, res) => {
+    const userIndices = req.body.userIndices;
+    console.log("userIndices where index = corresponding Allergy ID", userIndices);
+    console.log("cookie in delete is storing %s", req.cookies);
+
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
+    //вот сюда видимо надо поместить вызов функции?
+    //I think here is where the function should get called from
+
+    //to do1: мне дают данные клиента, нужно положить в базу данных
+    //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
+    //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
+    
+    /*
+    var sq1 = ????
+    try {
+      await db.execute(sql);
+    } catch (err) { 
+      // console.error(err);
+      res.json(err.code); //for example, ER_DUP_ENTRY
+      return;
+    }
+    */
+    res.send("useless value");
+    return;
+  });
 
   app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -447,6 +495,7 @@ async function main() {
 
 
 //////helper functions:
+
 
 async function initialize() {
   //change your parameters as needed
