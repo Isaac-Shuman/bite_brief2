@@ -1,3 +1,12 @@
+![BiteBrief.js](https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp)
+
+
+
+
+
+
+
+
 TO RUN THIS APP:
 Install mySQL
 Install node.js so that you can run "node server.js" later on
