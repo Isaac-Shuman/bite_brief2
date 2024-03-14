@@ -2,18 +2,20 @@
     <img src="https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp" width="400" height="auto">
 </div>
 
-Welcome message
+# Welcome to BiteBrief!
 
-Hello, Dear User! Welcome to the underbelly of our wondeful project BiteBrief. I am very happy to intorduce you to our work and guide you through getting started.
+**Hello, Dear User!** 🎉
+
+Welcome to the underbelly of our wondeful project BiteBrief. I am very happy to intorduce you to our work and guide you through getting started.
 First, let me tell you a bit about our project.
 
-Project description
+## Project description
 
 BiteBrief is a web service that helps users like yourself get notified about their favourite meals on the UCLA campus and maybe more when the time comes. Not only that, but our werservice can help you expand a user's dining experience by customizing a daily meal plan for them. A user can choose their diet, favourite dishes and allergies and get an email with a personalised daily meal plan option based on their preferences. On top of that we also collect data about allergies and their severities for each user and then are providing it to dining halls to make them aware of how they can modify the menu in the future to avoid triggering certain allergies. That said, we also have something fun: every day we choose a random user to display on the ?Home page? and 1 fun fact that they wrote about themselves; this feature creates a sense of community among users as well as motivates them to daily visit our website to check if maybe today is their day!
 
-How to run this app
+### How to run this app
 
-Preparation
+## Preparation
 
 Now let's jump back to the serious stuff: how to make this app run on your local machine.
 1. Install mySQL
@@ -33,7 +35,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
 
-Running this App
+## Running this App
 
 1. Run "npm install" to install the dependencies for the app such as axios and express.
 2. Run "node server.js" to start the backend server. If this works without throwing an error then it means you did the database part right.
@@ -41,7 +43,4 @@ Running this App
 The navbar may not be fully visible if your window is not maximized.
 
 
-
-Attribution info:
-    This project was bootstrapped with Create React App(https://github.com/facebook/create-react-app).
-    The frontend was made with help from: ??????
+The database backend was modeled after the examples on the mySQL2 API documentation https://sidorares.github.io/node-mysql2/docs/examples/queries/simple-queries
