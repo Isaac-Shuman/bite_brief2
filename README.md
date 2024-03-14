@@ -1,8 +1,4 @@
-![BiteBrief.js](https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.png)
-
-
-
-<img src="https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp" width="150" height="auto">
+<img src="https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp" width="500" height="auto">
 
 
 TO RUN THIS APP:
