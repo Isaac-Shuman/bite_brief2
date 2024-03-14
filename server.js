@@ -645,6 +645,25 @@ app.get('/api/user/userIndices', async (req, res) => {
   return;
 });
 
+  app.post("/api/user/addFact", async (req, res) => {
+    var userID = req.cookies["curUserId"];
+    const fact = req.body.fact;
+
+    var sql = `UPDATE Users
+    SET fun_fact = ${fact}
+    WHERE id = ${userID}`;
+
+    console.log("userID when adding fun fact %s", userID);
+    console.log("cookie in post is storing %s", req.cookies);
+
+    try {
+      await db.execute(sql);
+      res.json({ message: "Fact added successfully." });
+     } catch (err) {
+       console.error("Error adding fact:", err);
+       res.status(500).json({ message: "Error adding fact" });
+ }});
+
   app.post('/api/user/userIndices', async (req, res) => {
     const userIndices = req.body.userIndices;
     console.log("userIndices where index = corresponding Allergy ID", userIndices);
@@ -668,8 +687,10 @@ app.get('/api/user/userIndices', async (req, res) => {
     //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
     //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
     
+
     //res.json(newArray);
     res.send("success")
+
     return;
   });
 
@@ -689,7 +710,7 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Fizzy19123",
+    password: "12345678",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
@@ -722,8 +743,8 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Users ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
-   email VARCHAR(255) NOT NULL UNIQUE,
-   fun_fact VARCHAR(255)
+   email VARCHAR(255) NOT NULL,
+   fun_fact VARCHAR(255) DEFAULT ''
   );`; //creating a Users table
   //email should also be UNIQUE, but removed to test email notifs
 
