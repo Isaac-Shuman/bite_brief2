@@ -72,6 +72,16 @@ function Navbar() {
                 What's Trending
               </Link>
             </li>
+
+            <li className="nav-item">
+              <Link
+                to="/allergyseverity"
+                className="nav-links"
+                onClick={closeMobileMenu}
+              >
+                Allergy Severity
+              </Link>
+            </li>
           </ul>
           {button && <Button buttonStyle="btn--outline">SIGN UP</Button>}
         </div>

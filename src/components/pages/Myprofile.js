@@ -182,7 +182,7 @@ function YourDiets({diets, removeDiet})
 }
 
 
-function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex})
+function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex, removeAllergyIndex})
 {
   //console.log("allergyIndices are: ", allergyIndices)
   //console.log("allergyindices[index]: ", allergyIndices[0])
@@ -196,6 +196,7 @@ function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyI
       <button
         onClick={() => {
           removeAllergy(allergies[index].id);
+          removeAllergyIndex(allergies[index].id);
         }}
       >
         {" "}
@@ -235,7 +236,7 @@ export default function Myprofile() {
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
   const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
 
-  const loggedin = useContext(SignInContext);
+  var loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
   const handleSearchChange = async (event) => {
@@ -382,6 +383,22 @@ export default function Myprofile() {
   useEffect(() => {
 
     axios({
+      method: "get",
+      url: "/api/user/userIndices",
+    })
+      .then((response) => {
+        //setUserIndices(response.data);
+        console.log("Beatrice or Masha setUserIndices after response is working %s", JSON.stringify(response.data));
+        setUserIndices(response.data)
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+  }, [loggedin]);
+      
+  useEffect(() => {
+
+    axios({
       method: "post",
       url: "/api/user/userIndices",
       data: {
@@ -389,14 +406,15 @@ export default function Myprofile() {
       }
     })
       .then((response) => {
-        //setUserIndices(response.data); BEatrice or masha
-        console.log("Beatrice or Masha setUserIndices after response is working")
+        //setUserIndices(response.data);
+        console.log("Beatrice or Masha setUserIndices after response is working %s", JSON.stringify(response.data));
+        //setUserIndices(response.data)
       })
       .catch((error) => {
         console.error(error);
       });
       
-  }, [reRender, userIndices]);
+  }, [userIndices]);
 
   //clicked the remove button on a food item
   const removeFood = (foodID) => {
@@ -516,11 +534,17 @@ export default function Myprofile() {
     let nextUserIndices = userIndices.slice();
     nextUserIndices[allergyID] = value;
     setUserIndices(nextUserIndices);
-    console.log('event.target.value is: %s', value);
-    console.log('allergID is %i', allergyID);
-
-    
+    // console.log('event.target.value is: %s', value);
+    // console.log('allergID is %i', allergyID);
   };
+
+  const removeAllergyIndex = async (allergyID) => {
+    let nextUserIndices = userIndices.slice();
+    nextUserIndices[allergyID] = 0;
+    setUserIndices(nextUserIndices);
+    // console.log('event.target.value is: %s', value);
+    // console.log('allergID is %i', allergyID);
+  }
 
 ////////////
   if (loggedin)
@@ -532,7 +556,8 @@ export default function Myprofile() {
       <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
       <SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/>
       <YourDiets diets={userDiets} removeDiet={removeDiet}/>
-      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
+      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} removeAllergyIndex={removeAllergyIndex}
+      allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
       <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
     </div>
   );
