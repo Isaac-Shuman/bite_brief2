@@ -1,5 +1,6 @@
-<img src="https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp" width="500" height="auto">
-
+<div align="center">
+    <img src="https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp" width="500" height="auto">
+</div>
 
 TO RUN THIS APP:
 Install mySQL
