@@ -221,6 +221,43 @@ app.post("/api/favdishes", async (req, res) => {
   res.json(response);
 });
 
+app.get("/api/severeAllergies", async (req, res) => {
+  //send back:
+  //[meal, urlToNutritionPage, whether or not the user liked it]
+  // const meal = req.body.meal;
+  // //const data = { message: meal.length}
+  // const data = [
+  //   { name: 'Item 1     ', likes: 69 },
+  //   { name: 'Item 2     ', likes: 420 },
+  //   { name: 'Item 3     ', likes: 1738 },
+  //   { name: 'Item 4     ', likes: 25 },
+  //   { name: 'Item 5     ', likes: 30 }
+  // ]
+  // res.json(data);
+  console.log("refreshing trending list");
+
+  var updateLikes = `UPDATE Foods RIGHT JOIN (
+      SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
+      ON Foods.id = t.food_id
+      SET likes=cnt;`; // to update like count for foods
+
+  var sql = `SELECT name, likes
+    FROM Foods
+    ORDER BY likes DESC;`;
+
+  var response = "";
+  try {
+    await db.execute(updateLikes);
+    const [rFoods, fFoods] = await db.execute(sql);
+    response = rFoods;
+  } catch (err) {
+    // console.error(err);
+    res.json(err.code); //for example, ER_DUP_ENTRY
+  }
+  // console.log(JSON.stringify(response));
+  res.json(response);
+});
+
 app.post("/api/profile", async (req, res) => {
   //send back:
   //[meal, urlToNutritionPage, whether or not the user liked it]
@@ -710,7 +747,7 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "12345678",
+    password: "Fizzy19123",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
