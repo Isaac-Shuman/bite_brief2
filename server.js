@@ -92,6 +92,7 @@ app.get("/api/user/random", async (req, res) => {
       "SELECT id, username, fun_fact FROM Users ORDER BY RAND() LIMIT 1"
     );
     const user = users[0];
+    console.log(user);
     if (user) {
       res.json({ user });
     } else {
@@ -1130,13 +1131,13 @@ async function readData() {
       ;`;
 */
 
-      var usersIn = `INSERT INTO Users (username, email) VALUES
-    ('blen', 'bitebriefnoreply@gmail.com'),
-    ('Mashamellow', 'bitebriefnoreply@gmail.com'),
-    ('Koopa', 'bitebriefnoreply@gmail.com'),
-    ('zeeehan', 'bitebriefnoreply@gmail.com'),
-    ('0xyw','bitebriefnoreply@gmail.com'),
-    ('Kyuki','bitebriefnoreply@gmail.com')
+      var usersIn = `INSERT INTO Users (username, email, fun_fact) VALUES
+    ('blen', 'bitebriefnoreply@gmail.com', 'is very tired'),
+    ('Mashamellow', 'bitebriefnoreply@gmail.com' , 'is very happy'),
+    ('Koopa', 'bitebriefnoreply@gmail.com', 'likes emacs'),
+    ('zeeehan', 'bitebriefnoreply@gmail.com' , 'fast learner'),
+    ('0xyw','bitebriefnoreply@gmail.com' , 'good at styling'),
+    ('Kyuki','bitebriefnoreply@gmail.com', 'good at security')
   ;`;
 
       var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
