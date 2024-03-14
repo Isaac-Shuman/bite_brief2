@@ -92,6 +92,7 @@ app.get("/api/user/random", async (req, res) => {
       "SELECT id, username, fun_fact FROM Users ORDER BY RAND() LIMIT 1"
     );
     const user = users[0];
+    console.log(user);
     if (user) {
       res.json({ user });
     } else {
@@ -613,8 +614,8 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Welcome2023!",
-    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    password: "12345678",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -646,7 +647,7 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Users ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
-   email VARCHAR(255) NOT NULL UNIQUE,
+   email VARCHAR(255) NOT NULL,
    fun_fact VARCHAR(255)
   );`; //creating a Users table
   //email should also be UNIQUE, but removed to test email notifs
@@ -998,13 +999,13 @@ async function readData() {
       ;`;
 */
 
-      var usersIn = `INSERT INTO Users (username, email) VALUES
-    ('blen', 'bitebriefnoreply@gmail.com'),
-    ('Mashamellow', 'bitebriefnoreply@gmail.com'),
-    ('Koopa', 'bitebriefnoreply@gmail.com'),
-    ('zeeehan', 'bitebriefnoreply@gmail.com'),
-    ('0xyw','bitebriefnoreply@gmail.com'),
-    ('Kyuki','bitebriefnoreply@gmail.com')
+      var usersIn = `INSERT INTO Users (username, email, fun_fact) VALUES
+    ('blen', 'bitebriefnoreply@gmail.com', 'is very tired'),
+    ('Mashamellow', 'bitebriefnoreply@gmail.com' , 'is very happy'),
+    ('Koopa', 'bitebriefnoreply@gmail.com', 'likes emacs'),
+    ('zeeehan', 'bitebriefnoreply@gmail.com' , 'fast learner'),
+    ('0xyw','bitebriefnoreply@gmail.com' , 'good at styling'),
+    ('Kyuki','bitebriefnoreply@gmail.com', 'good at security')
   ;`;
 
       var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
