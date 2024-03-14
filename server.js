@@ -672,7 +672,7 @@ var createFoodsMealPeriodsTable = `
 
 async function getAllergiesIndex(){
   console.log("went into filling allergy data");
-  const [allergies] = await db.execute("SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id");
+  const [allergies] = await db.execute("SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id ORDER BY severity DESC");
   // const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
   // console.log("allergies: ", allergies);
   // if (allergies.length > 0)
