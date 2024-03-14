@@ -29,9 +29,9 @@ Now let's jump back to the serious stuff: how to make this app run on your local
    This is the little snippet of the code from the server.js file where you need to enter your credentials:
    const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "Fizzy19123",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "---",
+    password: "---",
+    database: "---", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
 
