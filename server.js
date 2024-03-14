@@ -222,7 +222,8 @@ app.post("/api/favdishes", async (req, res) => {
 });
 
 app.get("/api/severeAllergies", async (req, res) => {
-  await ReturnAllergySeverityJSONFormat();
+  let result = await ReturnAllergySeverityJSONFormat();
+  res.json(result)
 });
 
 app.post("/api/profile", async (req, res) => {
