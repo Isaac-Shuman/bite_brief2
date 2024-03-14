@@ -5,7 +5,7 @@
 const express = require("express");
 const app = express();
 const port = 3001; //arbitrary
-const email_rate = 10000; //every 10 s, low for testing
+const email_rate = 60000; //every 10 s, low for testing
 const csv = require("fast-csv"); //to parse the csv
 const fs = require("fs"); //to be able to gain acsess to the csv file
 
@@ -31,7 +31,7 @@ async function main() {
   await readData();
   return db;
 }
-// setInterval(()=>{email()}, email_rate); //email all users
+setInterval(()=>{email()}, email_rate); //email all users
 
 setInterval(() => {
   getAllergiesIndex();
@@ -751,9 +751,9 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "Fizzy19123",
+    password: "12345678",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
-    multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
+    multipleStatements: false, //protected against sql injections
   });
   console.log("connected as id " + connection.threadId);
 
