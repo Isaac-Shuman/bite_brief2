@@ -449,7 +449,7 @@ async function InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID
     await db.execute(`
     UPDATE Allergies_Users 
     SET allergy_severity = (?) 
-    WHERE allergy_id = (?) AND user_id = (?)`, [severity, allergy_id, userID]);
+    WHERE allergy_id = (?) AND user_id = (?);`, [severity, allergy_id, userID]);
   }
   // for(Indicy of userIndices)
   // {
@@ -457,6 +457,22 @@ async function InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID
   //   INSERT INTO Allergies_Users (allergy_severity) VALUES (?)
   //    WHERE Allergy_is = (?)`, Indicy.allergy_severity, Indicy.Allergie_id);
   // }
+}
+
+async function GetAllergySeverityInfoAboutAUser(UserID)
+{
+  const [allergy_data] = await db.execute(`
+  SELECT allergy_id, allergy_severity 
+  FROM Allergies_Users 
+  WHERE user_id = (?);`, [UserID]);
+
+  let allergyDataDictFormat = {};
+  for (let row of allergy_data) 
+  {
+    allergyDataDictFormat[row.allergy_id] = row.allergy_severity;
+  }
+
+  return allergyDataDictFormat;
 }
 
   app.post('/api/user/userIndices', async (req, res) => {
@@ -468,7 +484,12 @@ async function InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID
     if (!userID) {
       return res.status(400).json({ message: "Missing userID parameter" });
     }
+
+  
     //вот сюда видимо надо поместить вызов функции?
+
+    InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
+    GetAllergySeverityInfoAboutAUser(userID);
     //I think here is where the function should get called from
 
     //to do1: мне дают данные клиента, нужно положить в базу данных
