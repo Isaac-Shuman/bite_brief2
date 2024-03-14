@@ -3,7 +3,7 @@ import axios from "axios";
 import "./RecommendedDish.css";
 
 export default function RecommendedDishes({ loggedIn }) {
-  const [userID, setUserID] = useState("");
+  const [userID, setUserID] = useState("0");
   const [mealPeriodID, setMealPeriodID] = useState("");
   const [recommendedDishes, setRecommendedDishes] = useState([]);
   const [FavFoods, setFavFoods] = useState([Array().fill(null)]);
@@ -20,15 +20,15 @@ export default function RecommendedDishes({ loggedIn }) {
   };
 
   const fetchRecommendedDishes = async () => {
-    if (!userID || !mealPeriodID) {
-      alert("Both User ID and Meal Period ID are required.");
+    if (!mealPeriodID) {
+      alert(" Meal Period ID is required.");
       return;
     }
 
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `/api/recommendeddish?userID=${userID}&mealPeriodID=${mealPeriodID}`
+        `/api/recommendeddish?userID=${0}&mealPeriodID=${mealPeriodID}`
       );
       const limitedDishes = shuffleAndLimitDishes(response.data, 20);
       setRecommendedDishes(limitedDishes);
@@ -91,6 +91,7 @@ export default function RecommendedDishes({ loggedIn }) {
   if (loggedIn) {
     return (
       <div className="recommended-dishes">
+        {/*
         <input
           type="text"
           className="input-box"
@@ -98,6 +99,7 @@ export default function RecommendedDishes({ loggedIn }) {
           value={userID}
           onChange={(e) => setUserID(e.target.value)}
         />
+    */}
         <select
           className="input-box"
           value={mealPeriodID}
