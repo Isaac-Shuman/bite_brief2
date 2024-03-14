@@ -576,6 +576,19 @@ export default function Myprofile() {
     // console.log('allergID is %i', allergyID);
   };
 
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post("/api/user/addFact", { fact: funFact });
+      alert(response.data.message); // Display success message
+      //setFunFact(""); // Clear the input after successful submission
+    } catch (error) {
+      console.error("Error adding fun fact:", error);
+      alert("Failed to add fun fact.");
+    }
+  };
+
+
   const removeAllergyIndex = async (allergyID) => {
     let nextUserIndices = userIndices.slice();
     nextUserIndices[allergyID] = 0;
@@ -597,6 +610,7 @@ export default function Myprofile() {
       <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} removeAllergyIndex={removeAllergyIndex}
       allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
       <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
+      <AddFunFact funFact={funFact} setFunFact={setFunFact} handleSubmit={handleSubmit}/>
     </div>
   );
   }
