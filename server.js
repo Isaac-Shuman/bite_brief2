@@ -714,9 +714,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "Fizzy19123",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "Mashamellow",
+    password: "mY7733203***",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
   console.log("connected as id " + connection.threadId);
@@ -883,7 +883,7 @@ async function ReturnAllergySeverityJSONFormat()
     let allergySeverityDataDictFormat = {};
     for (let row of allergies) 
     {
-      allergySeverityDataDictFormat[row.allergy_id] = row.severity;
+      allergySeverityDataDictFormat[row.allergy_name] = row.severity;
     }
   
     return allergySeverityDataDictFormat;
