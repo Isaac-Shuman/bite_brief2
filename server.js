@@ -873,9 +873,11 @@ async function ReturnAllergySeverityJSONFormat()
 {
     //console.log("went into filling allergy data");
     const [allergies] = await db.execute(`
-    SELECT allergy_id, SUM(allergy_severity) AS severity 
-    FROM Allergies_Users 
-    GROUP BY allergy_id 
+    SELECT Allergies.name AS allergy_name, 
+    SUM(Allergies_Users.allergy_severity) AS severity 
+    FROM Allergies  
+    JOIN Allergies_Users ON Allergies.id = Allergies_Users.allergy_id 
+    GROUP BY Allergies_Users.allergy.id 
     ORDER BY severity DESC`);
     
     let allergySeverityDataDictFormat = {};
