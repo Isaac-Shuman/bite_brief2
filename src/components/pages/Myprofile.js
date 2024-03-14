@@ -197,49 +197,34 @@ function YourAllergies({
         <div className="item" key={index}>
           <span className="item-name">{item.name}</span>
 
-          <button
-            onClick={() => {
-              removeAllergy(allergies[index].id);
-            }}
-          >
-            {" "}
-            Remove{" "}
-          </button>
-          <p1> How would you rate the severity of this allergy? </p1>
-          <select
-            onChange={(event) => {
-              updateAllergyIndex(allergies[index].id, event.target.value);
-              console.log("allergyIndices[i] %i", allergyIndices[index]);
-            }}
-            value={allergyIndices[allergies[index].id]}
-          >
-            <option value={0}>Rate Severity 1-3</option>
-            <option value={1}>1- Barely notice it</option>
-            <option value={2}>2- Problematic</option>
-            <option value={3}>3- Anaphylaxis</option>
-            {/* Add more allergy options */}
-          </select>
-        </div>
-      ))}
+      <button
+        onClick={() => {
+          removeAllergy(allergies[index].id);
+          removeAllergyIndex(allergies[index].id);
+        }}
+      >
+        {" "}
+        Remove{" "}
+      </button>
+      <p1> How would you rate the severity of this allergy? </p1>
+      <select onChange={(event) => {
+        updateAllergyIndex(allergies[index].id, event.target.value); 
+        console.log("allergyIndices[i] %i", allergyIndices[index])}
+    
+      } value={allergyIndices[allergies[index].id]}>
+        <option value={0}>Rate Severity 1-3</option>
+        <option value={1}>1- Barely notice it</option>
+        <option value={2}>2- Problematic</option>
+        <option value={3}>3- Anaphylaxis</option>
+      {/* Add more allergy options */}
+      </select>
     </div>
+      ))}
+  </div>
   );
 }
 
-function AddFunFact() {
-  const [funFact, setFunFact] = useState("");
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    try {
-      const response = await axios.post("/api/user/addFact", { fact: funFact });
-      alert(response.data.message); // Display success message
-      setFunFact(""); // Clear the input after successful submission
-    } catch (error) {
-      console.error("Error adding fun fact:", error);
-      alert("Failed to add fun fact.");
-    }
-  };
-
+function AddFunFact({funFact, setFunFact, handleSubmit}) {
   return (
     <>
       <div>
@@ -267,6 +252,7 @@ export default function Myprofile() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [leftAllergies, setLeftAllergies] = useState([Array().fill(null)]);
   const [leftDiets, setLeftDiets] = useState([Array().fill(null)]);
+  const [funFact, setFunFact] = useState("");
 
   ////////////Beatrice:
   //get this user's favorite foods from the server
@@ -276,7 +262,7 @@ export default function Myprofile() {
   const [userAllergies, setUserAllergies] = useState([Array().fill(null)]);
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
   const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
-  const [funFact, setFunFact] = useState("");
+
 
   const loggedin = useContext(SignInContext);
 
@@ -435,6 +421,22 @@ export default function Myprofile() {
 
   useEffect(() => {
     axios({
+      method: "get",
+      url: "/api/user/userIndices",
+    })
+      .then((response) => {
+        //setUserIndices(response.data);
+        console.log("Beatrice or Masha setUserIndices after response is working %s", JSON.stringify(response.data));
+        setUserIndices(response.data)
+      })
+      .catch((error) => {
+        console.error(error);
+      })
+  }, [loggedin]);
+      
+  useEffect(() => {
+
+    axios({
       method: "post",
       url: "/api/user/userIndices",
       data: {
@@ -442,15 +444,15 @@ export default function Myprofile() {
       },
     })
       .then((response) => {
-        //setUserIndices(response.data); BEatrice or masha
-        console.log(
-          "Beatrice or Masha setUserIndices after response is working"
-        );
+        //setUserIndices(response.data);
+        console.log("Beatrice or Masha setUserIndices after response is working %s", JSON.stringify(response.data));
+        //setUserIndices(response.data)
       })
       .catch((error) => {
         console.error(error);
       });
-  }, [reRender, userIndices]);
+      
+  }, [userIndices]);
 
   //clicked the remove button on a food item
   const removeFood = (foodID) => {
@@ -570,35 +572,35 @@ export default function Myprofile() {
     let nextUserIndices = userIndices.slice();
     nextUserIndices[allergyID] = value;
     setUserIndices(nextUserIndices);
-    console.log("event.target.value is: %s", value);
-    console.log("allergID is %i", allergyID);
+    // console.log('event.target.value is: %s', value);
+    // console.log('allergID is %i', allergyID);
   };
 
-  ////////////
-  if (loggedin) {
-    return (
-      <div className="myprofile">
-        <EnterDish handleSearchChange={handleSearchChange} />
-        <DishSearchRes
-          searchPerformed={searchPerformed}
-          matchMeals={matchMeals}
-          userID={userID}
-          addToFavorites={addToFavorites}
-        />
-        <SelectDiet diets={leftDiets} addDiet={addDiet} />
-        <SelectAllergy allergies={leftAllergies} addAllergy={addAllergy} />
-        <YourDiets diets={userDiets} removeDiet={removeDiet} />
-        <YourAllergies
-          allergies={userAllergies}
-          removeAllergy={removeAllergy}
-          allergyIndices={userIndices}
-          updateAllergyIndex={updateAllergyIndex}
-        />
-        <YourFavorites favFoods={favFoods} removeFood={removeFood} />
-        <AddFunFact />
-      </div>
-    );
-  } else {
+  const removeAllergyIndex = async (allergyID) => {
+    let nextUserIndices = userIndices.slice();
+    nextUserIndices[allergyID] = 0;
+    setUserIndices(nextUserIndices);
+    // console.log('event.target.value is: %s', value);
+    // console.log('allergID is %i', allergyID);
+  }
+
+////////////
+  if (loggedin)
+  {
+  return (
+    <div className="myprofile">
+      <EnterDish handleSearchChange={handleSearchChange}/>
+      <DishSearchRes searchPerformed={searchPerformed} matchMeals={matchMeals} userID={userID} addToFavorites ={addToFavorites}/>
+      <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
+      <SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/>
+      <YourDiets diets={userDiets} removeDiet={removeDiet}/>
+      <YourAllergies allergies={userAllergies} removeAllergy={removeAllergy} removeAllergyIndex={removeAllergyIndex}
+      allergyIndices={userIndices} updateAllergyIndex={updateAllergyIndex}/>
+      <YourFavorites favFoods={favFoods} removeFood={removeFood}/>
+    </div>
+  );
+  }
+   else {
     return <h1> Please login </h1>;
   }
 }

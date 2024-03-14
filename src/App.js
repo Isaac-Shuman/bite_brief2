@@ -10,6 +10,8 @@ import AboutUs from "./components/pages/AboutUs";
 import { createContext, useEffect, useState } from "react";
 import axios from "axios";
 import RecommendedDish from "./components/pages/RecommendedDish";
+import { ToastContainer } from 'react-toastify';
+
 import AllergySeverity from "./components/pages/AllergySeverity";
 
 export const SignInContext = createContext(false);
@@ -69,6 +71,7 @@ function App() {
           />
         </Switch>
       </Router>
+      <ToastContainer />
     </>
   );
 }

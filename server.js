@@ -576,12 +576,87 @@ app.post("/api/user", async (req, res) => {
   res.send("success");
 });
 
-app.post("/api/user/userIndices", async (req, res) => {
-  const userIndices = req.body.userIndices;
-  console.log(
-    "userIndices where index = corresponding Allergy ID",
-    userIndices
-  );
+
+  app.post('/api/user', async (req, res) => {
+    const {data} = req.body
+
+    if (!data) {
+      return res.status(400).json({ error: 'No data passed' })
+    }
+    console.log("name received by api/signup: %s", data.name);
+    console.log("email received by api/signup %s", data.email);
+    // data.name, data.email, data.picture for Google user profile data
+
+
+    //BEATRICE. Why not just make searchQuery a global variable and use it as the user id when servicing other requests such as loading favorite dishes?
+    //ISAAC, then we still need to pass the email around for each user, might as well just use their ID directly
+    const searchQuery = `SELECT id 
+    FROM Users
+    WHERE email = '${data.email}';`
+    // search if user email is in database
+
+    const updateQuery = `INSERT INTO Users (username, email) VALUES
+    ('${data.name}', '${data.email}');`
+    // updates database with user data
+
+    try {
+      const [user,fields] = await db.execute(searchQuery)
+
+      if (user.length==0) { //email DNE
+        await db.execute(updateQuery)
+      }
+      const [u,f] = await db.execute(searchQuery)
+      // console.log(typeof(u))
+      // console.log(u)
+      var cuid = Number(u[0]['id'])
+      res.cookie("curUserId", cuid);
+      console.log("curUserID dredged from database in api/signup %s", cuid);
+      
+    }
+    catch (error) {
+      console.log(error.code)
+      res.status(400).json(error)
+    }
+
+    res.send("success")
+  })  
+///////
+
+async function InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID) //this function takes data about allergy severity from the client and inserts it into the DB
+{
+  for (const [allergy_id, severity] of Object.entries(userIndices))
+  {
+    await db.execute(`
+    UPDATE Allergies_Users 
+    SET allergy_severity = (?) 
+    WHERE allergy_id = (?) AND user_id = (?);`, [severity, allergy_id, userID]);
+  }
+  // for(Indicy of userIndices)
+  // {
+  //   [resultat] = await db.execute(`
+  //   INSERT INTO Allergies_Users (allergy_severity) VALUES (?)
+  //    WHERE Allergy_is = (?)`, Indicy.allergy_severity, Indicy.Allergie_id);
+  // }
+}
+
+async function GetAllergySeverityInfoAboutAUser(UserID)
+{
+  const [allergy_data] = await db.execute(`
+  SELECT allergy_id, allergy_severity 
+  FROM Allergies_Users 
+  WHERE user_id = (?);`, [UserID]);
+
+  let allergyDataDictFormat = {};
+  for (let row of allergy_data) 
+  {
+    allergyDataDictFormat[row.allergy_id] = row.allergy_severity;
+  }
+
+  return allergyDataDictFormat;
+}
+app.get('/api/user/userIndices', async (req, res) => {
+  //const userIndices = req.body.userIndices;
+  //console.log("userIndices where index = corresponding Allergy ID", userIndices);
   console.log("cookie in delete is storing %s", req.cookies);
 
   var userID = req.cookies["curUserId"];
@@ -589,32 +664,89 @@ app.post("/api/user/userIndices", async (req, res) => {
     return res.status(400).json({ message: "Missing userID parameter" });
   }
 
-  /*
-    var sq1 = ????
-    try {
-      await db.execute(sql);
-    } catch (err) { 
-      // console.error(err);
-      res.json(err.code); //for example, ER_DUP_ENTRY
-      return;
-    }
-    */
-  res.send("useless value");
+
+  //вот сюда видимо надо поместить вызов функции?
+
+  //await InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
+  const result = await GetAllergySeverityInfoAboutAUser(userID);
+
+  const newArray = Array.from({ length: 20 }, (_, index) => (result ? result[index] : 0) || 0);
+  //I think here is where the function should get called from
+
+  //to do1: мне дают данные клиента, нужно положить в базу данных
+  //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
+  //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
+  
+  res.json(newArray);
   return;
 });
 
-app.listen(port, () => {
-  console.log(`Server is running on port ${port}`);
-});
+  app.post("/api/user/addFact", async (req, res) => {
+    var userID = req.cookies["curUserId"];
+    const fact = req.body.fact;
+
+    var sql = `UPDATE Users
+    SET fun_fact = ${fact}
+    WHERE id = ${userID}`;
+
+    console.log("userID when adding fun fact %s", userID);
+    console.log("cookie in post is storing %s", req.cookies);
+
+    try {
+      await db.execute(sql);
+      res.json({ message: "Fact added successfully." });
+     } catch (err) {
+       console.error("Error adding fact:", err);
+       res.status(500).json({ message: "Error adding fact" });
+ }});
+
+  app.post('/api/user/userIndices', async (req, res) => {
+    const userIndices = req.body.userIndices;
+    console.log("userIndices where index = corresponding Allergy ID", userIndices);
+    //console.log("cookie in delete is storing %s", req.cookies);
+
+    var userID = req.cookies["curUserId"];
+    if (!userID) {
+      return res.status(400).json({ message: "Missing userID parameter" });
+    }
+
+  
+    //вот сюда видимо надо поместить вызов функции?
+
+    await InsertAllergySeverityIntoAllergies_UsersTable(userIndices, userID);
+    //const result = await GetAllergySeverityInfoAboutAUser(userID);
+
+    //const newArray = Array.from({ length: 20 }, (_, index) => result[index] || 0);
+    //I think here is where the function should get called from
+
+    //to do1: мне дают данные клиента, нужно положить в базу данных
+    //to do2: мне нужно взять данные клиента из баззы данных и вернуть их в правильном формате
+    //Done//to do 3: скинуть Айзаку где находится функция, которая возвращает данные по аллергиям всех клиентов
+    
+
+    //res.json(newArray);
+    res.send("success")
+
+    return;
+  });
+
+  app.listen(port, () => {
+    console.log(`Server is running on port ${port}`);
+  });
+
+// app.listen(port, () => {
+//   console.log(`Server is running on port ${port}`);
+// });
 
 //////helper functions:
+
 
 async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "12345678",
+    password: "Fizzy19123",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
@@ -648,7 +780,7 @@ async function initialize() {
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    username VARCHAR(255) NOT NULL UNIQUE,
    email VARCHAR(255) NOT NULL,
-   fun_fact VARCHAR(255)
+   fun_fact VARCHAR(255) DEFAULT ''
   );`; //creating a Users table
   //email should also be UNIQUE, but removed to test email notifs
 
