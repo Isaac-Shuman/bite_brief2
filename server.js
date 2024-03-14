@@ -750,9 +750,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "Mashamellow",
-    password: "mY7733203***",
-    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "root",
+    password: "12345678",
+    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //protected against sql injections
   });
   console.log("connected as id " + connection.threadId);
@@ -1149,12 +1149,12 @@ async function readData() {
 */
 
       var usersIn = `INSERT INTO Users (username, email, fun_fact) VALUES
-    ('blen', 'bitebriefnoreply@gmail.com', 'is very tired'),
-    ('Mashamellow', 'bitebriefnoreply@gmail.com' , 'is very happy'),
-    ('Koopa', 'bitebriefnoreply@gmail.com', 'likes emacs'),
-    ('zeeehan', 'bitebriefnoreply@gmail.com' , 'fast learner'),
-    ('0xyw','bitebriefnoreply@gmail.com' , 'good at styling'),
-    ('Kyuki','bitebriefnoreply@gmail.com', 'good at security')
+    ('blen', 'bitebriefnoreply2@gmail.com', 'is very tired'),
+    ('Mashamellow', 'bitebriefnoreply2@gmail.com' , 'is very happy'),
+    ('Koopa', 'bitebriefnoreply2@gmail.com', 'likes emacs'),
+    ('zeeehan', 'bitebriefnoreply2@gmail.com' , 'fast learner'),
+    ('0xyw','bitebriefnoreply2@gmail.com' , 'good at styling'),
+    ('Kyuki','bitebriefnoreply2@gmail.com', 'good at security')
   ;`;
 
       var foodsUsersIn = `INSERT INTO Foods_Users (food_id, user_id) VALUES 
@@ -1211,8 +1211,9 @@ async function email() {
   var transporter = await nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "bitebriefnoreply@gmail.com",
-      pass: "xjpp oelj zrxb hwxx",
+      user: "bitebriefnoreply2@gmail.com",
+      // pass: "xjpp oelj zrxb hwxx",
+      pass: "ttpl kwjf oiug qtcq",
     },
   });
   var getUsers = `SELECT id, username, email FROM Users`;
@@ -1240,7 +1241,7 @@ async function email() {
       console.log(msg);
 
       var mailOptions = {
-        from: "bitebriefnoreply@gmail.com",
+        from: "bitebriefnoreply2@gmail.com",
         to: `${rUsers[i].email}`,
         subject: `Sending your fav foods, ${rUsers[i].username}`,
         text: `${msg}`,

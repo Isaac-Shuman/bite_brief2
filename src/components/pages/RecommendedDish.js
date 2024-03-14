@@ -44,7 +44,7 @@ export default function RecommendedDishes({ loggedIn }) {
   const fetchFavorites = async () => {
     axios({
       method: "post",
-      url: "/api/myFavDishes",
+      url: "/api/user/myFavDishes",
       data: {
         id: userID,
       },
