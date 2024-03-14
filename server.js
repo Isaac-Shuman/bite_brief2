@@ -750,9 +750,9 @@ async function initialize() {
   //change your parameters as needed
   const connection = await mysql.createConnection({
     host: "localhost",
-    user: "root",
-    password: "12345678",
-    database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    user: "Mashamellow",
+    password: "mY7733203***",
+    database: "bitebrief", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //protected against sql injections
   });
   console.log("connected as id " + connection.threadId);
