@@ -187,6 +187,7 @@ function YourAllergies({
   removeAllergy,
   allergyIndices,
   updateAllergyIndex,
+  removeAllergyIndex
 }) {
   //console.log("allergyIndices are: ", allergyIndices)
   //console.log("allergyindices[index]: ", allergyIndices[0])
