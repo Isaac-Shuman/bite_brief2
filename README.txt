@@ -1,4 +1,4 @@
-![BiteBrief.js](https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.webp)
+![BiteBrief.js](https://github.com/Isaac-Shuman/bite_brief2/blob/main/bite_brief_logo.png?raw=true)
 
 
 
