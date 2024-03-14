@@ -182,6 +182,49 @@ function YourDiets({ diets, removeDiet }) {
   );
 }
 
+function YourAllergies({
+  allergies,
+  removeAllergy,
+  allergyIndices,
+  updateAllergyIndex,
+  removeAllergyIndex
+}) {
+  //console.log("allergyIndices are: ", allergyIndices)
+  //console.log("allergyindices[index]: ", allergyIndices[0])
+  return (
+    <div>
+      <h1> Your current allergies</h1>
+      {allergies.map((item, index) => (
+        <div className="item" key={index}>
+          <span className="item-name">{item.name}</span>
+
+      <button
+        onClick={() => {
+          removeAllergy(allergies[index].id);
+          removeAllergyIndex(allergies[index].id);
+        }}
+      >
+        {" "}
+        Remove{" "}
+      </button>
+      <p1> How would you rate the severity of this allergy? </p1>
+      <select onChange={(event) => {
+        updateAllergyIndex(allergies[index].id, event.target.value); 
+        console.log("allergyIndices[i] %i", allergyIndices[index])}
+    
+      } value={allergyIndices[allergies[index].id]}>
+        <option value={0}>Rate Severity 1-3</option>
+        <option value={1}>1- Barely notice it</option>
+        <option value={2}>2- Problematic</option>
+        <option value={3}>3- Anaphylaxis</option>
+      {/* Add more allergy options */}
+      </select>
+    </div>
+      ))}
+  </div>
+  );
+}
+
 function AddFunFact({funFact, setFunFact, handleSubmit}) {
   return (
     <>
