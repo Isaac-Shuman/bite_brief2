@@ -671,23 +671,20 @@ var createFoodsMealPeriodsTable = `
 }
 
 async function getAllergiesIndex(){
-  console.log("went into filling allergy data");
-  const [allergies] = await db.execute("SELECT allergy_id, SUM(allergy_severity) AS severity FROM Allergies_Users GROUP BY allergy_id ORDER BY severity DESC");
-  // const [allergies] = await db.execute("SELECT allergy_id, allergy_severity FROM Allergies_Users;");
-  // console.log("allergies: ", allergies);
-  // if (allergies.length > 0)
-  // {
-  //   for (const allergy of allergies)
-  //   {
-  //     await db.execute("INSERT INTO Allergies_Severity (allergy_id, allergy_severity) VALUES (?, ?)", [allergy.allergy_id, allergy.allergy_severity]);
-  //     console.log("filling one allergy", allergy);
-  //   }
-  // }
-  // else
-  // {
-  //   console.error("nothing in allergy");
-  // }
-  // console.log("done filling allery info");
+  //console.log("went into filling allergy data");
+  const [allergies] = await db.execute(`
+  SELECT allergy_id, SUM(allergy_severity) AS severity 
+  FROM Allergies_Users 
+  GROUP BY allergy_id 
+  ORDER BY severity DESC`);
+  
+  let allergySeverityDataDictFormat = {};
+  for (let row of allergies) 
+  {
+    allergySeverityDataDictFormat[row.allergy_id] = row.severity;
+  }
+
+  return allergySeverityDataDictFormat;
 }
 
 //here we have some helper functions for filling tables
