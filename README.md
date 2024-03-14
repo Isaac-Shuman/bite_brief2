@@ -42,5 +42,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
 3. Run "npm start" IN A SEPARATE TERMINAL to start the react app. The website should now be visible in port 3000 and should be loading in data from the server on the rankings page.
 The navbar may not be fully visible if your window is not maximized.
 
+#### Worked on the Project:
+Isaac Shuman, Maria Koldubaeva, 
 
 The database backend was modeled after the examples on the mySQL2 API documentation https://sidorares.github.io/node-mysql2/docs/examples/queries/simple-queries
