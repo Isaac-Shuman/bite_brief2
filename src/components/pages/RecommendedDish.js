@@ -32,7 +32,7 @@ export default function RecommendedDishes({ loggedIn }) {
       );
       const limitedDishes = shuffleAndLimitDishes(response.data, 20);
       setRecommendedDishes(limitedDishes);
-      // console.log("Recommended Dishes:", response.data);
+      console.log("Recommended Dishes:", response.data);
     } catch (error) {
       console.error("Error fetching recommended dishes:", error);
       alert("Failed to fetch recommended dishes.");
@@ -51,7 +51,7 @@ export default function RecommendedDishes({ loggedIn }) {
     })
       .then((response) => {
         setFavFoods(response.data);
-        // console.log(FavFoods);
+        console.log(FavFoods);
       })
       .catch((error) => {
         console.error(error);
@@ -71,7 +71,7 @@ export default function RecommendedDishes({ loggedIn }) {
       });
       if (response.status === 200) {
         alert("Dish added to favorites successfully!");
-        // console.log(response);
+        console.log(response);
         fetchFavorites(); // Re-fetch favorites to update the list
       } else {
         alert("Failed to add dish to favorites.");
@@ -128,7 +128,7 @@ export default function RecommendedDishes({ loggedIn }) {
                   <span className="dish-name">{dish.name}</span> -{" "}
                   <button
                     onClick={() => {
-                      // console.log(`Adding dish to favorites: ${dish.id}`);
+                      console.log(`Adding dish to favorites: ${dish.id}`);
                       addToFavorites(dish.id);
                     }}
                   >

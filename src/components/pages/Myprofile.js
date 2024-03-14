@@ -5,55 +5,62 @@ import "./Trending.css";
 import axios from "axios";
 import { SignInContext } from "../../App.js";
 
-function EnterDish({handleSearchChange}) {
-  return (
-  <>
-  <div>
-        <h2>1. My Favorite Dish</h2>
-        <input
-          type='text'
-          placeholder='Search for your favorite dish...'
-          onChange={handleSearchChange}
-        />
-        <button type="submit"><i class="fa fa-search"></i></button>
-        {/* Connect to backend database to fetch favorite dish */}
-  </div>
-  <br></br>
-  </>
-  );
-}
-
-function DishSearchRes({searchPerformed, matchMeals, userID, addToFavorites})
-{
-  return (
-    <div>
-    <h3>Search Results:</h3>
-    {searchPerformed && matchMeals.length === 0 ? (
-      <p>No dishes found...</p>
-    ) : (
-      matchMeals.slice(0, 10).map((meal, index) => (
-        <div key={index} className="search-result">
-          <span>{meal.name}</span>
-          <button onClick={() => addToFavorites(userID, meal.id)}>
-            Add to Favorites
-          </button>
-        </div>
-      ))
-    )}
-  </div>
-  );
-}
-
-{/* <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
-<SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/> */}
-
-function SelectDiet({diets, addDiet})
-{
+function EnterDish({ handleSearchChange }) {
   return (
     <>
+      <div>
+        <h2>1. My Favorite Dish</h2>
+        <input
+          type="text"
+          placeholder="Search for your favorite dish..."
+          onChange={handleSearchChange}
+        />
+        <button type="submit">
+          <i class="fa fa-search"></i>
+        </button>
+        {/* Connect to backend database to fetch favorite dish */}
+      </div>
+      <br></br>
+    </>
+  );
+}
+
+function DishSearchRes({
+  searchPerformed,
+  matchMeals,
+  userID,
+  addToFavorites,
+}) {
+  return (
     <div>
-    <h2>2. Add Diets</h2>
-    {/* <select onChange={addDiet}>
+      <h3>Search Results:</h3>
+      {searchPerformed && matchMeals.length === 0 ? (
+        <p>No dishes found...</p>
+      ) : (
+        matchMeals.slice(0, 10).map((meal, index) => (
+          <div key={index} className="search-result">
+            <span>{meal.name}</span>
+            <button onClick={() => addToFavorites(userID, meal.id)}>
+              Add to Favorites
+            </button>
+          </div>
+        ))
+      )}
+    </div>
+  );
+}
+
+{
+  /* <SelectDiet diets = {leftDiets} addDiet={addDiet}/>
+<SelectAllergy allergies ={leftAllergies} addAllergy = {addAllergy}/> */
+}
+
+function SelectDiet({ diets, addDiet }) {
+  return (
+    <>
+      <div>
+        <h2>2. Add Diets</h2>
+        {/* <select onChange={addDiet}>
       <option value="">Select Allergy</option>
       <option value="Peanuts">Peanuts</option>
       <option value="Shellfish">Shellfish</option>
@@ -61,33 +68,31 @@ function SelectDiet({diets, addDiet})
       <option value="Eggs">Eggs</option>
       <option value="Diary">Diary</option>
     </select> */}
-      {diets.map((item, index) => (
-    <div className="item" key={index}>
-      <span className="item-name">{item.name}</span>
+        {diets.map((item, index) => (
+          <div className="item" key={index}>
+            <span className="item-name">{item.name}</span>
 
-      <button
-        onClick={() => {
-          addDiet(diets[index].id);
-        }}
-      >
-        {" "}
-        Add{" "}
-      </button>
-    </div>
-  ))}
-  </div>
-  <br></br>
-  </>
-
+            <button
+              onClick={() => {
+                addDiet(diets[index].id);
+              }}
+            >
+              {" "}
+              Add{" "}
+            </button>
+          </div>
+        ))}
+      </div>
+      <br></br>
+    </>
   );
 }
 
-function SelectAllergy({allergies, addAllergy})
-{
+function SelectAllergy({ allergies, addAllergy }) {
   return (
-  <div>
-        <h2>3. Add Allergies</h2>
-        {/* <input
+    <div>
+      <h2>3. Add Allergies</h2>
+      {/* <input
           type="radio"
           id="goal1"
           name="healthGoal"
@@ -114,84 +119,83 @@ function SelectAllergy({allergies, addAllergy})
         />
         <label htmlFor="goal3">Control Blood Sugar</label>
         <br /> */}
-        {allergies.map((item, index) => (
-    <div className="item" key={index}>
-      <span className="item-name">{item.name}</span>
+      {allergies.map((item, index) => (
+        <div className="item" key={index}>
+          <span className="item-name">{item.name}</span>
 
-      <button
-        onClick={() => {
-          addAllergy(allergies[index].id);
-        }}
-      >
-        {" "}
-        Add{" "}
-      </button>
+          <button
+            onClick={() => {
+              addAllergy(allergies[index].id);
+            }}
+          >
+            {" "}
+            Add{" "}
+          </button>
+        </div>
+      ))}
     </div>
-  ))}
-      
-  </div>
   );
 }
 
-
-function YourFavorites({favFoods, removeFood})
-{
+function YourFavorites({ favFoods, removeFood }) {
   return (
-  <div>
-  <h1> Your favorite foods</h1>
-  {favFoods.slice(0, 10).map((item, index) => (
-    <div className="item" key={index}>
-      <span className="item-name">{item.name}</span>
-      {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
+    <div>
+      <h1> Your favorite foods</h1>
+      {favFoods.slice(0, 10).map((item, index) => (
+        <div className="item" key={index}>
+          <span className="item-name">{item.name}</span>
+          {/* <h1>{JSON.stringify(favFoods[index])} </h1>  */}
 
-      <button
-        onClick={() => {
-          removeFood(favFoods[index].id);
-        }}
-      >
-        {" "}
-        Remove{" "}
-      </button>
+          <button
+            onClick={() => {
+              removeFood(favFoods[index].id);
+            }}
+          >
+            {" "}
+            Remove{" "}
+          </button>
+        </div>
+      ))}
     </div>
-  ))}
-  </div>
   );
 }
 
-function YourDiets({diets, removeDiet})
-{
+function YourDiets({ diets, removeDiet }) {
   return (
-  <div>
-  <h1> Your current diets</h1>
-  {diets.map((item, index) => (
-    <div className="item" key={index}>
-      <span className="item-name">{item.name}</span>
+    <div>
+      <h1> Your current diets</h1>
+      {diets.map((item, index) => (
+        <div className="item" key={index}>
+          <span className="item-name">{item.name}</span>
 
-      <button
-        onClick={() => {
-          removeDiet(diets[index].id);
-        }}
-      >
-        {" "}
-        Remove{" "}
-      </button>
+          <button
+            onClick={() => {
+              removeDiet(diets[index].id);
+            }}
+          >
+            {" "}
+            Remove{" "}
+          </button>
+        </div>
+      ))}
     </div>
-  ))}
-  </div>
   );
 }
 
-
-function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyIndex, removeAllergyIndex})
-{
+function YourAllergies({
+  allergies,
+  removeAllergy,
+  allergyIndices,
+  updateAllergyIndex,
+}) {
   //console.log("allergyIndices are: ", allergyIndices)
   //console.log("allergyindices[index]: ", allergyIndices[0])
   return (
-  <div>
-  <h1> Your current allergies</h1>
-  {allergies.map((item, index) => (
-    <div className="item" key={index}>
-      <span className="item-name">{item.name}</span>
+    <div>
+      <h1> Your current allergies</h1>
+      {allergies.map((item, index) => (
+        <div className="item" key={index}>
+          <span className="item-name">{item.name}</span>
 
       <button
         onClick={() => {
@@ -207,7 +211,7 @@ function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyI
         updateAllergyIndex(allergies[index].id, event.target.value); 
         console.log("allergyIndices[i] %i", allergyIndices[index])}
     
-    } value={allergyIndices[allergies[index].id]}>
+      } value={allergyIndices[allergies[index].id]}>
         <option value={0}>Rate Severity 1-3</option>
         <option value={1}>1- Barely notice it</option>
         <option value={2}>2- Problematic</option>
@@ -215,8 +219,30 @@ function YourAllergies({allergies, removeAllergy, allergyIndices, updateAllergyI
       {/* Add more allergy options */}
       </select>
     </div>
-  ))}
+      ))}
   </div>
+  );
+}
+
+function AddFunFact({funFact, setFunFact, handleSubmit}) {
+  return (
+    <>
+      <div>
+        <h2>Tell us a fun fact about you!</h2>
+        <form onSubmit={handleSubmit}>
+          <input
+            type="text"
+            placeholder="Enter your fun fact here..."
+            value={funFact}
+            onChange={(e) => setFunFact(e.target.value)}
+          />
+          <button type="submit">
+            <i className="fa fa-send"></i>
+          </button>
+        </form>
+      </div>
+      <br />
+    </>
   );
 }
 
@@ -226,8 +252,9 @@ export default function Myprofile() {
   const [searchPerformed, setSearchPerformed] = useState(false);
   const [leftAllergies, setLeftAllergies] = useState([Array().fill(null)]);
   const [leftDiets, setLeftDiets] = useState([Array().fill(null)]);
+  const [funFact, setFunFact] = useState("");
 
-    ////////////Beatrice:
+  ////////////Beatrice:
   //get this user's favorite foods from the server
   const [userID, setUserID] = useState(0);
   const [reRender, setReRender] = useState(true);
@@ -236,14 +263,16 @@ export default function Myprofile() {
   const [userDiets, setUserDiets] = useState([Array().fill(null)]);
   const [userIndices, setUserIndices] = useState(Array(20).fill(0)); //max 20 allergies
 
-  var loggedin = useContext(SignInContext);
+
+  const loggedin = useContext(SignInContext);
 
   // Function to handle search bar change
   const handleSearchChange = async (event) => {
     const searchTerm = event.target.value;
     setText(searchTerm);
 
-    if (searchTerm.trim() === "") { //|| userID === 0) {
+    if (searchTerm.trim() === "") {
+      //|| userID === 0) {
       setMatchMeals([]);
       setSearchPerformed(false); // when a search has not been performed or is not valid
       return;
@@ -302,8 +331,22 @@ export default function Myprofile() {
     axios({
       method: "post",
       url: "/api/user/myDiets",
-      data: {
-      },
+      data: {},
+    })
+      .then((response) => {
+        setUserDiets(response.data);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [reRender]);
+
+  useEffect(() => {
+    //render all selected diets
+    axios({
+      method: "post",
+      url: "/api/user/myDiets",
+      data: {},
     })
       .then((response) => {
         setUserDiets(response.data);
@@ -318,11 +361,10 @@ export default function Myprofile() {
     axios({
       method: "post",
       url: "/api/user/myAllergies",
-      data: {
-      },
+      data: {},
     })
       .then((response) => {
-        console.log("rerender allergies")
+        console.log("rerender allergies");
         setUserAllergies(response.data);
       })
       .catch((error) => {
@@ -335,8 +377,7 @@ export default function Myprofile() {
     axios({
       method: "post",
       url: "/api/user/leftAllergies",
-      data: {
-      },
+      data: {},
     })
       .then((response) => {
         setLeftAllergies(response.data);
@@ -344,23 +385,22 @@ export default function Myprofile() {
       .catch((error) => {
         console.error(error);
       });
-    }, [reRender]);
+  }, [reRender]);
 
-    useEffect(() => {
-      //render all unselected diets
-      axios({
-        method: "post",
-        url: "/api/user/leftDiets",
-        data: {
-        },
+  useEffect(() => {
+    //render all unselected diets
+    axios({
+      method: "post",
+      url: "/api/user/leftDiets",
+      data: {},
+    })
+      .then((response) => {
+        setLeftDiets(response.data);
       })
-        .then((response) => {
-          setLeftDiets(response.data);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-      }, [reRender]);
+      .catch((error) => {
+        console.error(error);
+      });
+  }, [reRender]);
 
   useEffect(() => {
     //render all fav dishes of this user
@@ -377,11 +417,9 @@ export default function Myprofile() {
       .catch((error) => {
         console.error(error);
       });
-      
   }, [reRender]);
 
   useEffect(() => {
-
     axios({
       method: "get",
       url: "/api/user/userIndices",
@@ -402,8 +440,8 @@ export default function Myprofile() {
       method: "post",
       url: "/api/user/userIndices",
       data: {
-        userIndices: userIndices
-      }
+        userIndices: userIndices,
+      },
     })
       .then((response) => {
         //setUserIndices(response.data);
@@ -436,99 +474,99 @@ export default function Myprofile() {
     reRenderPage(); //to redisplay updated dishes
   };
 
-    //clicked the remove button on a diet item
-    const removeDiet = (dietID) => {
-      axios({
-        method: "delete",
-        url: "/api/user/myDiets",
-        data: {
-          Did: dietID,
-        },
+  //clicked the remove button on a diet item
+  const removeDiet = (dietID) => {
+    axios({
+      method: "delete",
+      url: "/api/user/myDiets",
+      data: {
+        Did: dietID,
+      },
+    })
+      .then((response) => {
+        console.log("deleted %d, code: %s", dietID, response);
       })
-        .then((response) => {
-          console.log("deleted %d, code: %s", dietID, response);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-  
-      reRenderPage(); //to redisplay updated diets
-    };
+      .catch((error) => {
+        console.error(error);
+      });
 
-    //clicked the remove button on an allergy item
-    const removeAllergy = (allergyID) => {
-      axios({
-        method: "delete",
-        url: "/api/user/myAllergies",
-        data: {
-          Aid: allergyID,
-        },
+    reRenderPage(); //to redisplay updated diets
+  };
+
+  //clicked the remove button on an allergy item
+  const removeAllergy = (allergyID) => {
+    axios({
+      method: "delete",
+      url: "/api/user/myAllergies",
+      data: {
+        Aid: allergyID,
+      },
+    })
+      .then((response) => {
+        console.log("deleted %d, code: %s", allergyID, response);
       })
-        .then((response) => {
-          console.log("deleted %d, code: %s", allergyID, response);
-        })
-        .catch((error) => {
-          console.error(error);
-        });
-  
-      reRenderPage(); //to redisplay updated diets
-    };
+      .catch((error) => {
+        console.error(error);
+      });
 
-    const addAllergy = async (allergyID) => {
-      try {
-        // Logging to ensure IDs are correct before sending
-        //console.log("Adding to favorites:", { userID, foodID });
-  
-        // Using Axios to send a POST request
-        const response = await axios.post("/api/user/addAllergy", {
-          allergyID
-        });
-  
-        // Check if the response was successful
-        if (response.status === 200) {
-          alert(response.data.message); // Or update UI to show success
-        } else {
-          console.error("Failed to add diet:", response.data.message);
-        }
-      } catch (error) {
-        // If there's an error with the request itself, it will be caught here
-        console.error(
-          "Error adding to diets:",
-          error.response ? error.response.data : error
-        );
-      }
-      reRenderPage();
-    };
+    reRenderPage(); //to redisplay updated diets
+  };
 
-    const addDiet = async (dietID) => {
-      try {
-        // Logging to ensure IDs are correct before sending
-        //console.log("Adding to favorites:", { userID, foodID });
-  
-        // Using Axios to send a POST request
-        const response = await axios.post("/api/user/addDiet", {
-          dietID
-        });
-  
-        // Check if the response was successful
-        if (response.status === 200) {
-          alert(response.data.message); // Or update UI to show success
-        } else {
-          console.error("Failed to add diet:", response.data.message);
-        }
-      } catch (error) {
-        // If there's an error with the request itself, it will be caught here
-        console.error(
-          "Error adding to diets:",
-          error.response ? error.response.data : error
-        );
+  const addAllergy = async (allergyID) => {
+    try {
+      // Logging to ensure IDs are correct before sending
+      //console.log("Adding to favorites:", { userID, foodID });
+
+      // Using Axios to send a POST request
+      const response = await axios.post("/api/user/addAllergy", {
+        allergyID,
+      });
+
+      // Check if the response was successful
+      if (response.status === 200) {
+        alert(response.data.message); // Or update UI to show success
+      } else {
+        console.error("Failed to add diet:", response.data.message);
       }
-      reRenderPage();
-    };
+    } catch (error) {
+      // If there's an error with the request itself, it will be caught here
+      console.error(
+        "Error adding to diets:",
+        error.response ? error.response.data : error
+      );
+    }
+    reRenderPage();
+  };
+
+  const addDiet = async (dietID) => {
+    try {
+      // Logging to ensure IDs are correct before sending
+      //console.log("Adding to favorites:", { userID, foodID });
+
+      // Using Axios to send a POST request
+      const response = await axios.post("/api/user/addDiet", {
+        dietID,
+      });
+
+      // Check if the response was successful
+      if (response.status === 200) {
+        alert(response.data.message); // Or update UI to show success
+      } else {
+        console.error("Failed to add diet:", response.data.message);
+      }
+    } catch (error) {
+      // If there's an error with the request itself, it will be caught here
+      console.error(
+        "Error adding to diets:",
+        error.response ? error.response.data : error
+      );
+    }
+    reRenderPage();
+  };
 
   const reRenderPage = () => {
     setReRender(!reRender);
-  };  
+  };
 
   const updateAllergyIndex = async (allergyID, value) => {
     let nextUserIndices = userIndices.slice();
@@ -562,9 +600,7 @@ export default function Myprofile() {
     </div>
   );
   }
-  else {
-    return (
-      <h1> Please login </h1>
-    )
+   else {
+    return <h1> Please login </h1>;
   }
 }

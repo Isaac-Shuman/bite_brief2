@@ -86,6 +86,41 @@ app.post("/api/user/addToFavorites", async (req, res) => {
   }
 });
 
+app.get("/api/user/random", async (req, res) => {
+  try {
+    const [users, _] = await db.execute(
+      "SELECT id, username, fun_fact FROM Users ORDER BY RAND() LIMIT 1"
+    );
+    const user = users[0];
+    if (user) {
+      res.json({ user });
+    } else {
+      res.status(404).json({ message: "No users found" });
+    }
+  } catch (err) {
+    console.error("Error fetching random user:", err);
+    res.status(500).json({ message: "Error fetching random user" });
+  }
+});
+
+app.post("/api/user/addFact", async (req, res) => {
+  var userID = req.cookies["curUserId"];
+  const fact = req.body.fact;
+
+  var sql = `UPDATE Users SET fun_fact = '${fact}' WHERE id = ${userID};`;
+
+  console.log("userID when adding fun fact %s", userID);
+  console.log("cookie in post is storing %s", req.cookies);
+
+  try {
+    await db.execute(sql);
+    res.json({ message: "Fact added successfully." });
+  } catch (err) {
+    console.error("Error adding fact:", err);
+    res.status(500).json({ message: "Error adding fact" });
+  }
+});
+
 app.get("/api/recommendeddish", async (req, res) => {
   const { formerlyUserID, mealPeriodID } = req.query; // Extracting userID and mealPeriodID from query parameters
   var userID = req.cookies["curUserId"];
@@ -710,7 +745,7 @@ async function initialize() {
   const connection = await mysql.createConnection({
     host: "localhost",
     user: "root",
-    password: "12345678",
+    password: "Fizzy19123",
     database: "default_db", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
   });
