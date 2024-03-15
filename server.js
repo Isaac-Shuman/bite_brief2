@@ -793,8 +793,8 @@ async function initialize() {
   CREATE TABLE IF NOT EXISTS Allergies ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
    name VARCHAR(255) NOT NULL UNIQUE
-  );`; //creating an Allergies table (btw status I think was a good idea to add but wer can delete it. o it basically just indicates how dangerous the allergy is. We can probably make it so that the user inputs how dangerous it is for them)
-
+  );`; //creating an Allergies table 
+  
   var createDietsTable = `
   CREATE TABLE IF NOT EXISTS Diets ( 
    id BIGINT AUTO_INCREMENT PRIMARY KEY,
@@ -1027,8 +1027,7 @@ async function findADiet(diet_name) {
 }
 
 async function readData() {
-  //probably where the web-scraping stuff goes
-  //add some dummy data for now
+  //Insert webscrapped data into the database
 
   //var foodIn = "INSERT INTO Foods (name) VALUES ('pizza'), ('cake'), ('salad'), ('ice cream'), ('water');";
   var allergyIn = `INSERT INTO Allergies (name) VALUES 
@@ -1095,22 +1094,6 @@ async function readData() {
                 );
               }
             }
-            if (header_csv.startsWith("Tag")) {
-              const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
-              //теперь тут нужно сделать проверку по соответсвию содержимого тега (tag) одной или другой таблице
-              const Allergie_id = await findAnAllergie(tag);
-              const Diet_id = await findADiet(tag);
-              if (Allergie_id) {
-                //тут надо функцию котора заполняла бы хелпер таблицу AllrgiesFoods
-                await InsertIdsIntoAllergies_FoodsTable(
-                  inserted_food_id,
-                  Allergie_id
-                );
-              }
-              if (Diet_id) {
-                await InsertIdsIntoDiets_FoodsTable(inserted_food_id, Diet_id);
-              }
-            }
 
             if (header_csv.startsWith("Tag")) {
               const tag = row[header_csv]; //по сути row - это словарь, поэтому тут мы просто извлекаем по ключу headerа значения в этой строчке
@@ -1148,6 +1131,7 @@ async function readData() {
       ;`;
 */
 
+// dummy data
       var usersIn = `INSERT INTO Users (username, email, fun_fact) VALUES
     ('blen', 'bitebriefnoreply2@gmail.com', 'is very tired'),
     ('Mashamellow', 'bitebriefnoreply2@gmail.com' , 'is very happy'),
@@ -1180,6 +1164,7 @@ async function readData() {
       //   (3, 3), (3, 5)
       // ;`;
 
+      //update the like count of each food
       var updateLikes = `UPDATE Foods RIGHT JOIN (
 SELECT food_id, COUNT(user_id) AS cnt FROM Foods_Users GROUP BY food_id) AS t
 ON Foods.id = t.food_id
@@ -1258,6 +1243,7 @@ async function email() {
   } catch (err) {
     console.log(err);
   }
+
 }
 
 async function randQuerry(arg) {

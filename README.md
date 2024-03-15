@@ -23,6 +23,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
 3. Make a mySQL database:
     If you're on Linux or WSL, run: usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF 
     NOT EXISTS default_db" -p
+    where -u represents the user and "default_db" the name of the database; you may name this as you please.
     If you're on Windows, you can use mySQL Workbench or a VSCode extention.
     Yyou have a lot of flexibility with where the database is located.
 4. Update the initialize function server.js to your username, password, and database name.
@@ -36,9 +37,9 @@ Now let's jump back to the serious stuff: how to make this app run on your local
    
     password: "---",
    
-    database: "---", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+    database: "---",
    
-    multipleStatements: false,
+    ...
   });
 6. Create a new email to send email notifications by:
     1. Create a new (personal) gmail account
@@ -65,6 +66,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
 4. Google login is configured to only work on localhost and localhost:3000.
 
 The navbar may not be fully visible if your window is not maximized.
+Once you have logged in, you can navigate through the app using the navbar.
 
 #### Worked on the Project:
 Isaac Shuman, Maria Koldubaeva, Kelvin Jiang, Zihan Xia, Yue Wu, Beatrice Leung
