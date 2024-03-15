@@ -28,13 +28,18 @@ Now let's jump back to the serious stuff: how to make this app run on your local
 4. Update the initialize function server.js to your username, password, and database name.
    This is the little snippet of the code from the server.js file where you need to enter your credentials:
    const connection = await mysql.createConnection({
+   
     host: "localhost",
+   
     user: "---",
+   
     password: "---",
+   
     database: "---", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
+   
     multipleStatements: false,
   });
-5. Create a new email to send email notifications by:
+6. Create a new email to send email notifications by:
     1. Create a new (personal) gmail account
     2. Go to your account settings by clicking on your profile icon (manage your account)
     3. Go to Security and set up 2-factor authentification
