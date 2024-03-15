@@ -34,6 +34,22 @@ Now let's jump back to the serious stuff: how to make this app run on your local
     database: "---", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
     multipleStatements: false,
   });
+5. Create a new email to send email notifications by:
+    1. Create a new (personal) gmail account
+    2. Go to your account settings by clicking on your profile icon (manage your account)
+    3. Go to Security and set up 2-factor authentification
+    4. Search for "app passwords" in the search bar
+    5. Create a new app password and copy the generated app password
+  In the email() function in server.js (~line 1210), change the user and password fields to the new email and app password respectively. Also change the sender in
+        var mailOptions = {
+        from: "youremail@gmail.com"
+        ...
+        }
+  (API keys are not allowed, but please just use
+      user: "bitebriefnoreply2@gmail.com",
+      pass: "ttpl kwjf oiug qtcq",
+  if it doesn't work)
+
 
 ### Running this App
 
