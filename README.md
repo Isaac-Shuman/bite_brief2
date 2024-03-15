@@ -32,7 +32,7 @@ Now let's jump back to the serious stuff: how to make this app run on your local
     user: "---",
     password: "---",
     database: "---", //usr/local/mysql/bin/mysql -u root -e "CREATE DATABASE IF NOT EXISTS default_db" -p
-    multipleStatements: false, //not protected against sql injections, but meh ¯\_(ツ)_/¯
+    multipleStatements: false,
   });
 
 ### Running this App
@@ -50,3 +50,7 @@ Isaac Shuman, Maria Koldubaeva, Kelvin Jiang, Zihan Xia, Yue Wu, Beatrice Leung
 The database backend was modeled after the examples on the mySQL2 API documentation https://sidorares.github.io/node-mysql2/docs/examples/queries/simple-queries
 
 Google login was modeled after https://blog.logrocket.com/guide-adding-google-login-react-app/
+
+Initial app was based on https://www.linkedin.com/pulse/connecting-reactjs-nodejs-bit-by-bit-guide-ataur-rahman/
+
+Emails referenced https://www.w3schools.com/nodejs/nodejs_email.asp
